@@ -1235,8 +1235,8 @@
             }
         }, 1000);
 
-        // ==========================================
-        // 🌐 ОБЛАЧНОЕ СОХРАНЕНИЕ И ЛИДЕРБОРД
+// ==========================================
+        // 🌐 УЛУЧШЕННОЕ СОХРАНЕНИЕ С ПРОВЕРКОЙ ОШИБОК
         // ==========================================
         async function loadCloudSave() {
             if (!db) return;
@@ -1262,17 +1262,23 @@
             if (!db) return;
             try {
                 const currentRoom = getCurrentRoomNumber();
-                await db.from('players').upsert({
-                    user_id: currentUserId,
+                const { error } = await db.from('players').upsert({
+                    user_id: String(currentUserId),
                     username: currentUserName,
                     score: Math.floor(state.score),
                     total_earned: Math.floor(state.totalEarned),
-                    rebirths: state.rebirths,
-                    room: currentRoom,
+                    rebirths: Number(state.rebirths || 0),
+                    room: Number(currentRoom || 10),
                     save_data: state,
                     updated_at: new Date().toISOString()
                 });
-                document.getElementById('cloudStatus').innerText = '☁️ Сохранено';
+
+                if (error) {
+                    console.error("Ошибка сохранения в Supabase:", error);
+                    document.getElementById('cloudStatus').innerText = '⚠️ Ошибка БД';
+                } else {
+                    document.getElementById('cloudStatus').innerText = '☁️ Сохранено';
+                }
             } catch(e) {
                 document.getElementById('cloudStatus').innerText = '⚠️ Офлайн';
             }
@@ -1284,23 +1290,28 @@
             if (!db) {
                 listEl.innerHTML = `
                     <div style="color: #ff9500; font-size: 11px; text-align: center; padding: 10px;">
-                        ⚠️ Настройте Supabase ключи в коде для работы ТОП-3!
+                        ⚠️ Supabase не подключен! Проверьте ключи.
                     </div>
                 `;
                 return;
             }
 
             try {
+                // Запрос топа по перерождениям и очкам
                 const { data, error } = await db
                     .from('players')
                     .select('username, rebirths, room, score')
                     .order('rebirths', { ascending: false })
-                    .order('room', { ascending: false })
                     .order('score', { ascending: false })
                     .limit(3);
 
+                if (error) {
+                    listEl.innerHTML = `<div style="color:#ff3344; font-size:11px; text-align:center; padding:10px;">Ошибка БД: ${error.message}</div>`;
+                    return;
+                }
+
                 if (!data || data.length === 0) {
-                    listEl.innerHTML = '<div style="color:#aaa; font-size:12px; text-align:center;">Пока нет игроков в топе!</div>';
+                    listEl.innerHTML = '<div style="color:#aaa; font-size:12px; text-align:center; padding:15px;">Пока нет записей. Сделайте клик и подождите 5 сек!</div>';
                     return;
                 }
 
@@ -1323,7 +1334,7 @@
                     listEl.appendChild(item);
                 });
             } catch(e) {
-                listEl.innerHTML = '<div style="color:#ff3344; font-size:12px; text-align:center;">Ошибка загрузки топа</div>';
+                listEl.innerHTML = `<div style="color:#ff3344; font-size:12px; text-align:center;">Ошибка подключения: ${e.message}</div>`;
             }
         }
 
