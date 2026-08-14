@@ -40,6 +40,56 @@
             background: radial-gradient(circle at 50% 25%, #3a0007 0%, #0d0002 100%) !important;
         }
 
+        /* 🏆 ВСПЛЫВАЮЩИЙ ПОПАП ТРОФЕЯ */
+        .trophy-popup {
+            position: fixed;
+            top: -100px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 350px;
+            background: rgba(20, 20, 26, 0.95);
+            border: 2px solid #ffd700;
+            border-radius: 14px;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.4);
+            z-index: 1000;
+            transition: top 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            backdrop-filter: blur(10px);
+        }
+        .trophy-popup.show {
+            top: 15px;
+        }
+        .trophy-popup-img {
+            width: 48px;
+            height: 48px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 1px solid #ffd700;
+        }
+        .trophy-popup-info {
+            text-align: left;
+            flex-grow: 1;
+        }
+        .trophy-popup-badge {
+            font-size: 9px;
+            font-weight: 900;
+            color: #ffd700;
+            letter-spacing: 1px;
+        }
+        .trophy-popup-title {
+            font-size: 14px;
+            font-weight: 800;
+            color: #fff;
+        }
+        .trophy-popup-desc {
+            font-size: 10px;
+            color: #aaa;
+        }
+
         /* Верхняя панель */
         .top-bar {
             width: 100%;
@@ -131,7 +181,7 @@
             transition: width 0.25s ease;
         }
 
-        /* Зона клика (УВЕЛИЧЕНА) */
+        /* Зона клика */
         .clicker-area {
             position: relative;
             display: flex;
@@ -164,7 +214,6 @@
             cursor: pointer;
         }
 
-        /* КАРТИНКА A200 (УВЕЛИЧЕНА ДО 215px) */
         .target-img {
             width: 215px;
             height: 215px;
@@ -178,7 +227,6 @@
             filter: drop-shadow(0 0 25px #ffd700) sepia(1) saturate(5) hue-rotate(5deg) !important;
         }
 
-        /* АКСЕССУАРЫ (ПОДОГНАНЫ ПОД БОЛЬШОЙ РАЗМЕР) */
         .accessory {
             position: absolute;
             pointer-events: none;
@@ -240,12 +288,12 @@
         /* Табы снизу */
         .tab-bar {
             width: 100%;
-            max-width: 380px;
+            max-width: 390px;
             display: flex;
             background: rgba(20, 20, 24, 0.9);
             border-radius: 12px;
             padding: 3px;
-            gap: 3px;
+            gap: 2px;
             margin-bottom: 5px;
             border: 1px solid rgba(255,255,255,0.08);
             z-index: 10;
@@ -253,11 +301,11 @@
 
         .tab-btn {
             flex: 1;
-            padding: 6px 2px;
+            padding: 6px 1px;
             background: transparent;
             border: none;
             color: #8e8e93;
-            font-size: 11px;
+            font-size: 10px;
             font-weight: 700;
             border-radius: 8px;
             cursor: pointer;
@@ -273,7 +321,7 @@
         /* Контейнеры панелей */
         .content-panel {
             width: 100%;
-            max-width: 380px;
+            max-width: 390px;
             flex-grow: 1;
             overflow-y: auto;
             display: none;
@@ -309,6 +357,57 @@
         .btn-title { font-size: 13px; font-weight: 700; }
         .btn-desc { font-size: 11px; color: #8e8e93; margin-top: 1px; }
         .btn-cost { font-size: 13px; font-weight: 800; color: #ff9500; }
+
+        /* 🏆 КАРТОЧКИ ТРОФЕЕВ */
+        .trophy-card {
+            background: rgba(26, 26, 30, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+        .trophy-card.unlocked {
+            border-color: rgba(255, 215, 0, 0.4);
+            background: rgba(40, 35, 20, 0.6);
+        }
+        .trophy-card.locked {
+            opacity: 0.45;
+            filter: grayscale(1);
+        }
+        .trophy-img {
+            width: 44px;
+            height: 44px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .trophy-card.unlocked .trophy-img {
+            border-color: #ffd700;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+        }
+        .trophy-info {
+            text-align: left;
+            flex-grow: 1;
+        }
+        .trophy-title {
+            font-size: 13px;
+            font-weight: 800;
+            color: #fff;
+        }
+        .trophy-desc {
+            font-size: 11px;
+            color: #aaa;
+            margin-top: 1px;
+        }
+        .trophy-status {
+            font-size: 10px;
+            font-weight: 900;
+            color: #ffd700;
+        }
 
         /* 🎰 Казино */
         .casino-box {
@@ -411,6 +510,16 @@
 </head>
 <body>
 
+    <!-- 🏆 ВСПЛЫВАЮЩИЙ ПОПАП -->
+    <div class="trophy-popup" id="trophyPopup">
+        <img src="a60.png" class="trophy-popup-img" id="popupTrophyImg">
+        <div class="trophy-popup-info">
+            <div class="trophy-popup-badge">🏆 НОВЫЙ ТРОФЕЙ!</div>
+            <div class="trophy-popup-title" id="popupTrophyTitle">А60</div>
+            <div class="trophy-popup-desc" id="popupTrophyDesc">Один из Первых</div>
+        </div>
+    </div>
+
     <div class="top-bar">
         <div class="rebirth-badge" id="rebirthBadge">🌀 Перерождений: 0 (+0%)</div>
         <button class="sound-toggle" id="soundBtn" onclick="toggleSound()">🔊</button>
@@ -445,6 +554,7 @@
         <button class="tab-btn active" onclick="switchTab('upgrades', this)">⚡ Сила</button>
         <button class="tab-btn" onclick="switchTab('casino', this)">🎰 Рулетка</button>
         <button class="tab-btn" onclick="switchTab('perks', this)">✨ Приколы</button>
+        <button class="tab-btn" onclick="switchTab('trophies', this)">🏆 Трофеи</button>
         <button class="tab-btn" onclick="switchTab('rebirth', this)">🌀 Ребитх</button>
     </div>
 
@@ -467,6 +577,9 @@
     </div>
 
     <div class="content-panel" id="tabPerks"></div>
+
+    <!-- Панель Трофеев -->
+    <div class="content-panel" id="tabTrophies"></div>
 
     <!-- Панель 4: Перерождение -->
     <div class="content-panel" id="tabRebirth">
@@ -537,6 +650,17 @@
                     osc.connect(gain); gain.connect(audioCtx.destination);
                     osc.start(now + i * 0.05); osc.stop(now + i * 0.05 + 0.12);
                 });
+            } else if (type === 'trophy') {
+                [523, 659, 783, 1046, 1318].forEach((freq, i) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + i * 0.08);
+                    gain.gain.setValueAtTime(0.3, now + i * 0.08);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.25);
+                    osc.connect(gain); gain.connect(audioCtx.destination);
+                    osc.start(now + i * 0.08); osc.stop(now + i * 0.08 + 0.25);
+                });
             } else if (type === 'rebirth') {
                 [200, 300, 450, 600, 900, 1200].forEach((freq, i) => {
                     const osc = audioCtx.createOscillator();
@@ -578,7 +702,7 @@
         }
 
         // ==========================================
-        // 🎮 ИГРОВОЙ ДВИЖОК
+        // 🎮 ИГРОВОЙ ДВИЖОК И ТРОФЕИ
         // ==========================================
         
         function getRankThreshold(rankIndex) {
@@ -617,6 +741,16 @@
             { id: 'energy', title: '⚡ Энергетик A200', desc: '+25% к пассивному доходу навсегда', cost: 50000000 }
         ];
 
+        // 🏆 КОНФИГУРАЦИЯ ТРОФЕЕВ
+        const TROPHIES_CONFIG = [
+            { id: 'a60', title: 'А60', desc: 'Один из Первых', roomReq: 60, img: 'a60.png' },
+            { id: 'gold_a200', title: 'Золотой A200', desc: 'Поздравляю!!', roomReq: 200, img: 'face.png', isGold: true },
+            { id: 'a166', title: 'А166', desc: 'беги.', roomReq: 360, img: 'a166.png' },
+            { id: 'a277', title: 'A277', desc: 'Please check your internet connection and try again.', roomReq: 480, img: 'a277.png' },
+            { id: 'escape', title: 'Побег', desc: 'Поздравляю, ты сбежал из этого места...или нет?', roomReq: 500, img: 'escape.png' },
+            { id: 'a1000', title: 'А1000', desc: 'Как долго это заняло..?', roomReq: 1000, img: 'a1000.png' }
+        ];
+
         let state = {
             score: 0,
             totalEarned: 0,
@@ -625,13 +759,15 @@
             cps: 0,
             rebirths: 0,
             levels: { tapPower: 0, critChance: 0, radio: 0, flashlight: 0, door: 0, overload: 0 },
-            perks: {}
+            perks: {},
+            trophies: {}
         };
 
-        const saved = localStorage.getItem('a200_chaos_v4');
+        const saved = localStorage.getItem('a200_chaos_v5');
         if (saved) {
             try { state = Object.assign(state, JSON.parse(saved)); } catch(e){}
         }
+        if (!state.trophies) state.trophies = {};
 
         let selectedBet = 0;
 
@@ -645,6 +781,7 @@
         const rebirthBadgeEl = document.getElementById('rebirthBadge');
         const tabUpgradesEl = document.getElementById('tabUpgrades');
         const tabPerksEl = document.getElementById('tabPerks');
+        const tabTrophiesEl = document.getElementById('tabTrophies');
 
         function switchTab(tabId, btn) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -654,6 +791,7 @@
             if (tabId === 'upgrades') document.getElementById('tabUpgrades').classList.add('active');
             if (tabId === 'casino') document.getElementById('tabCasino').classList.add('active');
             if (tabId === 'perks') document.getElementById('tabPerks').classList.add('active');
+            if (tabId === 'trophies') document.getElementById('tabTrophies').classList.add('active');
             if (tabId === 'rebirth') document.getElementById('tabRebirth').classList.add('active');
         }
 
@@ -702,6 +840,60 @@
                     <div class="btn-cost">${isBought ? 'КУПЛЕНО ✔' : cfg.cost.toLocaleString() + ' 💰'}</div>
                 `;
                 tabPerksEl.appendChild(btn);
+            });
+        }
+
+        // Рендер вкладки трофеев
+        function renderTrophies() {
+            tabTrophiesEl.innerHTML = '';
+            TROPHIES_CONFIG.forEach(t => {
+                const isUnlocked = !!state.trophies[t.id];
+                const card = document.createElement('div');
+                card.className = 'trophy-card ' + (isUnlocked ? 'unlocked' : 'locked');
+
+                const goldStyle = t.isGold ? 'filter: sepia(1) saturate(5) hue-rotate(5deg);' : '';
+
+                card.innerHTML = `
+                    <img src="${t.img}" class="trophy-img" style="${goldStyle}">
+                    <div class="trophy-info">
+                        <div class="trophy-title">${t.title}</div>
+                        <div class="trophy-desc">${t.desc}</div>
+                    </div>
+                    <div class="trophy-status">${isUnlocked ? 'ПОЛУЧЕНО ✅' : `🔒 Комната ${t.roomReq}`}</div>
+                `;
+                tabTrophiesEl.appendChild(card);
+            });
+        }
+
+        // Показ всплывающего окна
+        function showTrophyPopup(trophy) {
+            const popup = document.getElementById('trophyPopup');
+            const img = document.getElementById('popupTrophyImg');
+            const title = document.getElementById('popupTrophyTitle');
+            const desc = document.getElementById('popupTrophyDesc');
+
+            img.src = trophy.img;
+            img.style.filter = trophy.isGold ? 'sepia(1) saturate(5) hue-rotate(5deg)' : 'none';
+            title.innerText = trophy.title;
+            desc.innerText = trophy.desc;
+
+            popup.classList.add('show');
+            playSound('trophy');
+            if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+
+            setTimeout(() => {
+                popup.classList.remove('show');
+            }, 4000);
+        }
+
+        function checkTrophies(currentRoom) {
+            TROPHIES_CONFIG.forEach(t => {
+                if (currentRoom >= t.roomReq && !state.trophies[t.id]) {
+                    state.trophies[t.id] = true;
+                    showTrophyPopup(t);
+                    renderTrophies();
+                    saveGame();
+                }
             });
         }
 
@@ -783,6 +975,7 @@
             updateInfiniteRank();
             renderUpgrades();
             renderPerks();
+            renderTrophies();
             updateBetUI();
             updateRebirthUI();
         }
@@ -805,6 +998,9 @@
 
             rankBarEl.style.width = `${percent}%`;
             nextRankProgressEl.innerText = `${Math.floor(state.totalEarned).toLocaleString()} / ${nextThresh.toLocaleString()}`;
+
+            // Проверка получения трофеев
+            checkTrophies(currentRoomNumber);
         }
 
         function setBetFraction(frac) {
@@ -966,7 +1162,7 @@
         }, 1000);
 
         function saveGame() {
-            localStorage.setItem('a200_chaos_v4', JSON.stringify(state));
+            localStorage.setItem('a200_chaos_v5', JSON.stringify(state));
         }
         setInterval(saveGame, 3000);
 
