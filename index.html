@@ -763,9 +763,15 @@
             trophies: {}
         };
 
-        const saved = localStorage.getItem('a200_chaos_v5');
-        if (saved) {
-            try { state = Object.assign(state, JSON.parse(saved)); } catch(e){}
+        const saveKeys = ['a200_chaos_v5', 'a200_chaos_v4', 'a200_chaos_v3', 'a200_clicker_save'];
+        for (const key of saveKeys) {
+            const saved = localStorage.getItem(key);
+            if (saved) {
+                try {
+                    state = Object.assign(state, JSON.parse(saved));
+                    break; // Нашли твои данные и восстановили!
+                } catch(e) {}
+            }
         }
         if (!state.trophies) state.trophies = {};
 
