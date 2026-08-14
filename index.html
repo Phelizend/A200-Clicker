@@ -22,7 +22,7 @@
             flex-direction: column;
             align-items: center;
             height: 100vh;
-            padding: 8px 12px;
+            padding: 6px 12px;
             overflow: hidden;
             position: relative;
             transition: background 0.5s ease;
@@ -75,7 +75,7 @@
 
         .header {
             text-align: center;
-            margin-top: 2px;
+            margin-top: 1px;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -83,7 +83,7 @@
         }
 
         .score {
-            font-size: 36px;
+            font-size: 34px;
             font-weight: 900;
             background: linear-gradient(180deg, #ffffff 0%, #a0a0a0 100%);
             -webkit-background-clip: text;
@@ -104,10 +104,10 @@
         .level-container {
             width: 85%;
             max-width: 280px;
-            margin-top: 3px;
+            margin-top: 2px;
             display: flex;
             flex-direction: column;
-            gap: 3px;
+            gap: 2px;
         }
         .level-text {
             display: flex;
@@ -131,15 +131,29 @@
             transition: width 0.25s ease;
         }
 
-        /* Зона клика */
+        /* Зона клика (УВЕЛИЧЕНА) */
         .clicker-area {
             position: relative;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 165px;
+            height: 235px;
             margin: 2px 0;
             z-index: 5;
+        }
+
+        .halo {
+            position: absolute;
+            width: 260px;
+            height: 260px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 51, 68, 0.25) 0%, rgba(0, 0, 0, 0) 70%);
+            animation: pulseHalo 2s ease-in-out infinite alternate;
+            pointer-events: none;
+        }
+        @keyframes pulseHalo {
+            0% { transform: scale(0.9); opacity: 0.3; }
+            100% { transform: scale(1.25); opacity: 0.8; }
         }
 
         .target-container {
@@ -150,18 +164,21 @@
             cursor: pointer;
         }
 
+        /* КАРТИНКА A200 (УВЕЛИЧЕНА ДО 215px) */
         .target-img {
-            width: 145px;
-            height: 145px;
-            filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.2));
+            width: 215px;
+            height: 215px;
+            filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.25));
             -webkit-tap-highlight-color: transparent;
             pointer-events: none;
+            display: block;
         }
 
         .target-img.gold-face {
-            filter: drop-shadow(0 0 20px #ffd700) sepia(1) saturate(5) hue-rotate(5deg) !important;
+            filter: drop-shadow(0 0 25px #ffd700) sepia(1) saturate(5) hue-rotate(5deg) !important;
         }
 
+        /* АКСЕССУАРЫ (ПОДОГНАНЫ ПОД БОЛЬШОЙ РАЗМЕР) */
         .accessory {
             position: absolute;
             pointer-events: none;
@@ -169,26 +186,26 @@
             z-index: 4;
         }
         .glasses {
-            top: 24px;
-            left: 18px;
-            width: 110px;
-            font-size: 28px;
+            top: 36px;
+            left: 28px;
+            width: 160px;
+            font-size: 42px;
             text-align: center;
         }
         .crown {
-            top: -22px;
+            top: -34px;
             left: 0;
             width: 100%;
-            font-size: 30px;
+            font-size: 44px;
             text-align: center;
-            filter: drop-shadow(0 0 8px #ffd700);
+            filter: drop-shadow(0 0 10px #ffd700);
         }
 
         /* 🌧️ Падающие мини-лица */
         .falling-face {
             position: absolute;
-            width: 30px;
-            height: 30px;
+            width: 32px;
+            height: 32px;
             pointer-events: none;
             z-index: 100;
             filter: drop-shadow(0 0 6px rgba(255, 51, 68, 0.6));
@@ -202,7 +219,7 @@
 
         .float-text {
             position: absolute;
-            font-size: 20px;
+            font-size: 22px;
             font-weight: 900;
             color: #fff;
             pointer-events: none;
@@ -211,7 +228,7 @@
         }
         .float-text.crit {
             color: #ff2a4b;
-            font-size: 28px;
+            font-size: 32px;
             text-shadow: 0 0 15px #ff0033;
         }
         @keyframes floatUp {
@@ -265,6 +282,7 @@
             padding-right: 2px;
             margin-bottom: 4px;
             z-index: 10;
+            min-height: 0;
         }
         .content-panel.active { display: flex; }
         .content-panel::-webkit-scrollbar { width: 3px; }
@@ -414,6 +432,7 @@
     </div>
 
     <div class="clicker-area">
+        <div class="halo"></div>
         <div class="target-container" id="clickTargetContainer">
             <div class="accessory crown" id="accCrown">👑</div>
             <div class="accessory glasses" id="accGlasses">🕶️</div>
@@ -519,7 +538,6 @@
                     osc.start(now + i * 0.05); osc.stop(now + i * 0.05 + 0.12);
                 });
             } else if (type === 'rebirth') {
-                // Эпический звук перерождения
                 [200, 300, 450, 600, 900, 1200].forEach((freq, i) => {
                     const osc = audioCtx.createOscillator();
                     const gain = audioCtx.createGain();
@@ -574,7 +592,6 @@
             }
         }
 
-        // Геометрический порог для перерождения
         function getRebirthCost(rebirthCount) {
             return Math.floor(50000 * Math.pow(2.8, rebirthCount));
         }
@@ -588,7 +605,6 @@
             { id: 'overload', title: '🌀 Спавн A200', desc: '+150/сек', baseCost: 9000, costMult: 1.75, type: 'cps', value: 150 }
         ];
 
-        // 📈 ХАРДКОРНЫЕ ЦЕНЫ НА ПРИКОЛЫ
         const PERKS_CONFIG = [
             { id: 'glasses', title: '🕶️ Очки Thug Life', desc: 'Стильные очки на A200', cost: 15000 },
             { id: 'bassboost', title: '🔊 Басс-буст', desc: 'Тяжелый басовый клик', cost: 40000 },
@@ -727,9 +743,6 @@
             }
         }
 
-        // ==========================================
-        // 🌀 СИСТЕМА ПЕРЕРОЖДЕНИЯ
-        // ==========================================
         function doRebirth() {
             const cost = getRebirthCost(state.rebirths);
             if (state.score >= cost) {
@@ -774,7 +787,6 @@
             updateRebirthUI();
         }
 
-        // 🚪 Комнаты теперь идут по +10
         function updateInfiniteRank() {
             let rank = 1;
             while (state.totalEarned >= getRankThreshold(rank)) {
@@ -795,9 +807,6 @@
             nextRankProgressEl.innerText = `${Math.floor(state.totalEarned).toLocaleString()} / ${nextThresh.toLocaleString()}`;
         }
 
-        // ==========================================
-        // 🎰 РУЛЕТКА
-        // ==========================================
         function setBetFraction(frac) {
             selectedBet = Math.floor(state.score * frac);
             updateBetUI();
@@ -867,15 +876,11 @@
             }, 100);
         }
 
-        // ==========================================
-        // 🌀 КЛИК ПО A200 С УЧЁТОМ ПЕРЕРОЖДЕНИЙ
-        // ==========================================
         let currentAngle = 0;
 
         clickTargetContainer.addEventListener('pointerdown', (e) => {
             const isCrit = Math.random() * 100 < state.critChance;
             
-            // Расчет буста от перерождений (+25% за каждый уровень)
             const rebirthMultiplier = 1 + (state.rebirths * 0.25);
             const baseDamage = state.tapPower * rebirthMultiplier;
             const finalDamage = Math.max(1, Math.floor(isCrit ? baseDamage * 5 : baseDamage));
