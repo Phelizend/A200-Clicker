@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>A200 Кликер</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: radial-gradient(circle at 50% 25%, #15151c 0%, #050507 100%);
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            padding: 8px 12px;
+            overflow: hidden;
+            position: relative;
+            transition: background 0.5s ease;
+        }
+
+        body.disco-mode { animation: discoBg 6s linear infinite alternate; }
+        @keyframes discoBg {
+            0% { background: radial-gradient(circle, #2b003b 0%, #080014 100%); }
+            33% { background: radial-gradient(circle, #002b3b 0%, #000c14 100%); }
+            66% { background: radial-gradient(circle, #3b2b00 0%, #140d00 100%); }
+            100% { background: radial-gradient(circle, #3b000a 0%, #140003 100%); }
+        }
+
+        body.blood-mode {
+            background: radial-gradient(circle at 50% 25%, #3a0007 0%, #0d0002 100%) !important;
+        }
+
+        /* Верхняя панель */
+        .top-bar {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .rebirth-badge {
+            font-size: 11px;
+            font-weight: 800;
+            color: #00e5ff;
+            background: rgba(0, 229, 255, 0.1);
+            border: 1px solid rgba(0, 229, 255, 0.3);
+            padding: 3px 8px;
+            border-radius: 8px;
+            text-shadow: 0 0 8px rgba(0, 229, 255, 0.5);
+        }
+
+        .sound-toggle {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .header {
+            text-align: center;
+            margin-top: 2px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .score {
+            font-size: 36px;
+            font-weight: 900;
+            background: linear-gradient(180deg, #ffffff 0%, #a0a0a0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.3));
+            transition: transform 0.08s;
+        }
+
+        .score.bounce { transform: scale(1.08); }
+
+        .cps {
+            font-size: 11px;
+            color: #4cd964;
+            font-weight: 600;
+        }
+
+        /* Полоса ранга */
+        .level-container {
+            width: 85%;
+            max-width: 280px;
+            margin-top: 3px;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        .level-text {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: #ffaa00;
+            font-weight: 800;
+        }
+        .progress-bar-bg {
+            width: 100%;
+            height: 4px;
+            background: #1c1c1e;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #ff0055, #ffaa00);
+            box-shadow: 0 0 8px #ff0055;
+            transition: width 0.25s ease;
+        }
+
+        /* Зона клика */
+        .clicker-area {
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 165px;
+            margin: 2px 0;
+            z-index: 5;
+        }
+
+        .target-container {
+            position: relative;
+            display: inline-block;
+            transition: transform 0.12s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            transform-origin: center center;
+            cursor: pointer;
+        }
+
+        .target-img {
+            width: 145px;
+            height: 145px;
+            filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.2));
+            -webkit-tap-highlight-color: transparent;
+            pointer-events: none;
+        }
+
+        .target-img.gold-face {
+            filter: drop-shadow(0 0 20px #ffd700) sepia(1) saturate(5) hue-rotate(5deg) !important;
+        }
+
+        .accessory {
+            position: absolute;
+            pointer-events: none;
+            display: none;
+            z-index: 4;
+        }
+        .glasses {
+            top: 24px;
+            left: 18px;
+            width: 110px;
+            font-size: 28px;
+            text-align: center;
+        }
+        .crown {
+            top: -22px;
+            left: 0;
+            width: 100%;
+            font-size: 30px;
+            text-align: center;
+            filter: drop-shadow(0 0 8px #ffd700);
+        }
+
+        /* 🌧️ Падающие мини-лица */
+        .falling-face {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            pointer-events: none;
+            z-index: 100;
+            filter: drop-shadow(0 0 6px rgba(255, 51, 68, 0.6));
+            animation: showerFall var(--duration) cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+        @keyframes showerFall {
+            0% { transform: translate(0, 0) scale(0.5) rotate(0deg); opacity: 1; }
+            25% { transform: translate(var(--pop-x), var(--pop-y)) scale(1.1) rotate(var(--mid-rot)); opacity: 1; }
+            100% { transform: translate(var(--end-x), var(--end-y)) scale(0.7) rotate(var(--end-rot)); opacity: 0; }
+        }
+
+        .float-text {
+            position: absolute;
+            font-size: 20px;
+            font-weight: 900;
+            color: #fff;
+            pointer-events: none;
+            animation: floatUp 0.7s ease-out forwards;
+            z-index: 105;
+        }
+        .float-text.crit {
+            color: #ff2a4b;
+            font-size: 28px;
+            text-shadow: 0 0 15px #ff0033;
+        }
+        @keyframes floatUp {
+            0% { opacity: 1; transform: translateY(0) scale(0.8); }
+            50% { transform: translateY(-35px) scale(1.2); }
+            100% { opacity: 0; transform: translateY(-70px) scale(0.8); }
+        }
+
+        /* Табы снизу */
+        .tab-bar {
+            width: 100%;
+            max-width: 380px;
+            display: flex;
+            background: rgba(20, 20, 24, 0.9);
+            border-radius: 12px;
+            padding: 3px;
+            gap: 3px;
+            margin-bottom: 5px;
+            border: 1px solid rgba(255,255,255,0.08);
+            z-index: 10;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 6px 2px;
+            background: transparent;
+            border: none;
+            color: #8e8e93;
+            font-size: 11px;
+            font-weight: 700;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .tab-btn.active {
+            background: #2c2c30;
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+        }
+
+        /* Контейнеры панелей */
+        .content-panel {
+            width: 100%;
+            max-width: 380px;
+            flex-grow: 1;
+            overflow-y: auto;
+            display: none;
+            flex-direction: column;
+            gap: 6px;
+            padding-right: 2px;
+            margin-bottom: 4px;
+            z-index: 10;
+        }
+        .content-panel.active { display: flex; }
+        .content-panel::-webkit-scrollbar { width: 3px; }
+        .content-panel::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+
+        .card-btn {
+            background: rgba(26, 26, 30, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 8px 12px;
+            color: #fff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            flex-shrink: 0;
+        }
+        .card-btn:not(:disabled):active { transform: scale(0.97); }
+        .card-btn:disabled { opacity: 0.35; filter: grayscale(0.8); cursor: not-allowed; }
+        .card-btn.bought { border-color: #4cd964; background: rgba(76, 217, 100, 0.1); }
+
+        .btn-info { text-align: left; }
+        .btn-title { font-size: 13px; font-weight: 700; }
+        .btn-desc { font-size: 11px; color: #8e8e93; margin-top: 1px; }
+        .btn-cost { font-size: 13px; font-weight: 800; color: #ff9500; }
+
+        /* 🎰 Казино */
+        .casino-box {
+            background: rgba(26, 26, 30, 0.9);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 14px;
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        .roulette-display {
+            width: 100%;
+            height: 50px;
+            background: #0d0d11;
+            border-radius: 10px;
+            border: 2px solid #ffaa00;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 900;
+            color: #ffaa00;
+        }
+        .bet-buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+            width: 100%;
+        }
+        .bet-btn {
+            background: #25252b;
+            border: 1px solid rgba(255,255,255,0.15);
+            color: #fff;
+            padding: 6px 3px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .bet-btn:active { background: #ff9500; color: #000; }
+        .spin-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #ff9500, #ff2a4b);
+            border: none;
+            color: #fff;
+            padding: 10px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 900;
+            cursor: pointer;
+        }
+        .spin-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+        /* 🌀 Стили Перерождения */
+        .rebirth-box {
+            background: radial-gradient(circle at 50% 50%, rgba(0, 229, 255, 0.15) 0%, rgba(10, 10, 15, 0.9) 100%);
+            border: 1px solid rgba(0, 229, 255, 0.4);
+            border-radius: 14px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            text-align: center;
+            box-shadow: 0 0 25px rgba(0, 229, 255, 0.15);
+        }
+        .rebirth-title {
+            font-size: 18px;
+            font-weight: 900;
+            color: #00e5ff;
+            text-shadow: 0 0 10px rgba(0, 229, 255, 0.6);
+        }
+        .rebirth-stats {
+            font-size: 12px;
+            color: #ccc;
+            line-height: 1.5;
+            background: rgba(0,0,0,0.3);
+            padding: 8px 12px;
+            border-radius: 8px;
+            width: 100%;
+        }
+        .rebirth-btn {
+            width: 100%;
+            background: linear-gradient(135deg, #00e5ff, #0066ff);
+            border: none;
+            color: #fff;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 229, 255, 0.4);
+            transition: transform 0.1s;
+        }
+        .rebirth-btn:active { transform: scale(0.97); }
+        .rebirth-btn:disabled { opacity: 0.4; filter: grayscale(0.8); cursor: not-allowed; box-shadow: none; }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar">
+        <div class="rebirth-badge" id="rebirthBadge">🌀 Перерождений: 0 (+0%)</div>
+        <button class="sound-toggle" id="soundBtn" onclick="toggleSound()">🔊</button>
+    </div>
+
+    <div class="header">
+        <div class="score" id="score">0</div>
+        <div class="cps" id="cps">В секунду: +0</div>
+        
+        <div class="level-container">
+            <div class="level-text">
+                <span id="rankTitle">Комната 10</span>
+                <span id="nextRankProgress">0 / 100</span>
+            </div>
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="rankBar"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="clicker-area">
+        <div class="target-container" id="clickTargetContainer">
+            <div class="accessory crown" id="accCrown">👑</div>
+            <div class="accessory glasses" id="accGlasses">🕶️</div>
+            <img src="face.png" alt="A200" class="target-img" id="clickTarget">
+        </div>
+    </div>
+
+    <!-- Вкладки снизу -->
+    <div class="tab-bar">
+        <button class="tab-btn active" onclick="switchTab('upgrades', this)">⚡ Сила</button>
+        <button class="tab-btn" onclick="switchTab('casino', this)">🎰 Рулетка</button>
+        <button class="tab-btn" onclick="switchTab('perks', this)">✨ Приколы</button>
+        <button class="tab-btn" onclick="switchTab('rebirth', this)">🌀 Ребитх</button>
+    </div>
+
+    <div class="content-panel active" id="tabUpgrades"></div>
+
+    <div class="content-panel" id="tabCasino">
+        <div class="casino-box">
+            <div style="font-size: 11px; color: #8e8e93; font-weight: bold;">РУЛЕТКА РИСКА A200</div>
+            <div class="roulette-display" id="rouletteDisplay">ГОТОВ</div>
+            
+            <div class="bet-buttons">
+                <button class="bet-btn" onclick="setBetFraction(0.1)">10%</button>
+                <button class="bet-btn" onclick="setBetFraction(0.25)">25%</button>
+                <button class="bet-btn" onclick="setBetFraction(0.5)">50%</button>
+                <button class="bet-btn" onclick="setBetFraction(1.0)" style="color:#ff3344;">ВСЁ 💀</button>
+            </div>
+            <div style="font-size: 12px; font-weight: bold;" id="currentBetText">Ставка: 0 💰</div>
+            <button class="spin-btn" id="spinBtn" onclick="spinRoulette()">КРУТИТЬ РУЛЕТКУ 🎲</button>
+        </div>
+    </div>
+
+    <div class="content-panel" id="tabPerks"></div>
+
+    <!-- Панель 4: Перерождение -->
+    <div class="content-panel" id="tabRebirth">
+        <div class="rebirth-box">
+            <div class="rebirth-title">ПЕРЕРОЖДЕНИЕ</div>
+            <div class="rebirth-stats">
+                Текущий уровень: <b id="rebirthLvlText">0</b><br>
+                Постоянный бонус клика: <b id="rebirthBoostText" style="color:#00e5ff;">+0%</b><br>
+                Каждое перерождение даёт: <b style="color:#4cd964;">+25% силы клика</b><br>
+                <small style="color:#888;">(Очки и апгрейды сбросятся, но приколюхи и буст останутся)</small>
+            </div>
+            <button class="rebirth-btn" id="rebirthActionBtn" onclick="doRebirth()">
+                ПЕРЕРОДИТЬСЯ (50,000 💰)
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const tg = window.Telegram?.WebApp;
+        if (tg) { tg.ready(); tg.expand(); }
+
+        // ==========================================
+        // 🔊 ЗВУКОВОЙ ДВИЖОК
+        // ==========================================
+        let audioCtx = null;
+        let soundEnabled = true;
+
+        function initAudio() {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+        }
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            initAudio();
+            if (!audioCtx) return;
+            const now = audioCtx.currentTime;
+
+            if (type === 'click') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                const isBass = state.perks.bassboost;
+                osc.type = isBass ? 'triangle' : 'sawtooth';
+                osc.frequency.setValueAtTime(isBass ? 110 : (240 + Math.random() * 100), now);
+                osc.frequency.exponentialRampToValueAtTime(isBass ? 20 : 40, now + 0.08);
+                gain.gain.setValueAtTime(isBass ? 0.45 : 0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(now); osc.stop(now + 0.08);
+            } else if (type === 'crit') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(650, now);
+                osc.frequency.exponentialRampToValueAtTime(120, now + 0.18);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(now); osc.stop(now + 0.18);
+            } else if (type === 'buy') {
+                [440, 554, 659].forEach((freq, i) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now + i * 0.05);
+                    gain.gain.setValueAtTime(0.2, now + i * 0.05);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.05 + 0.12);
+                    osc.connect(gain); gain.connect(audioCtx.destination);
+                    osc.start(now + i * 0.05); osc.stop(now + i * 0.05 + 0.12);
+                });
+            } else if (type === 'rebirth') {
+                // Эпический звук перерождения
+                [200, 300, 450, 600, 900, 1200].forEach((freq, i) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + i * 0.08);
+                    gain.gain.setValueAtTime(0.25, now + i * 0.08);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.2);
+                    osc.connect(gain); gain.connect(audioCtx.destination);
+                    osc.start(now + i * 0.08); osc.stop(now + i * 0.08 + 0.2);
+                });
+            } else if (type === 'win') {
+                [523, 659, 783, 1046].forEach((freq, i) => {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + i * 0.07);
+                    gain.gain.setValueAtTime(0.25, now + i * 0.07);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.07 + 0.15);
+                    osc.connect(gain); gain.connect(audioCtx.destination);
+                    osc.start(now + i * 0.07); osc.stop(now + i * 0.07 + 0.15);
+                });
+            } else if (type === 'lose') {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(160, now);
+                osc.frequency.linearRampToValueAtTime(60, now + 0.3);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.connect(gain); gain.connect(audioCtx.destination);
+                osc.start(now); osc.stop(now + 0.3);
+            }
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('soundBtn').innerText = soundEnabled ? '🔊' : '🔇';
+        }
+
+        // ==========================================
+        // 🎮 ИГРОВОЙ ДВИЖОК
+        // ==========================================
+        
+        function getRankThreshold(rankIndex) {
+            if (rankIndex <= 0) return 0;
+            if (rankIndex <= 10) {
+                return Math.floor(150 * (rankIndex * (rankIndex + 1)) / 2);
+            } else {
+                const baseAt10 = Math.floor(150 * (10 * 11) / 2);
+                const extra = rankIndex - 10;
+                return Math.floor(baseAt10 * Math.pow(1.38, extra));
+            }
+        }
+
+        // Геометрический порог для перерождения
+        function getRebirthCost(rebirthCount) {
+            return Math.floor(50000 * Math.pow(2.8, rebirthCount));
+        }
+
+        const UPGRADES_CONFIG = [
+            { id: 'tapPower', title: '⚡ Сила Тапа', desc: '+1 базовый клик', baseCost: 10, costMult: 1.5, type: 'tap', value: 1 },
+            { id: 'critChance', title: '🎯 Критический Удар', desc: '+2% шанс крита x5', baseCost: 75, costMult: 1.8, type: 'crit', value: 2, maxLvl: 25 },
+            { id: 'radio', title: '🔋 Батарейка', desc: '+1/сек', baseCost: 50, costMult: 1.6, type: 'cps', value: 1 },
+            { id: 'flashlight', title: '🔦 Фонарик', desc: '+8/сек', baseCost: 350, costMult: 1.65, type: 'cps', value: 8 },
+            { id: 'door', title: '🗄 Шкаф', desc: '+35/сек', baseCost: 1800, costMult: 1.7, type: 'cps', value: 35 },
+            { id: 'overload', title: '🌀 Спавн A200', desc: '+150/сек', baseCost: 9000, costMult: 1.75, type: 'cps', value: 150 }
+        ];
+
+        // 📈 ХАРДКОРНЫЕ ЦЕНЫ НА ПРИКОЛЫ
+        const PERKS_CONFIG = [
+            { id: 'glasses', title: '🕶️ Очки Thug Life', desc: 'Стильные очки на A200', cost: 15000 },
+            { id: 'bassboost', title: '🔊 Басс-буст', desc: 'Тяжелый басовый клик', cost: 40000 },
+            { id: 'disco', title: '🪩 Дискотека A200', desc: 'Переливающийся неоновый фон', cost: 120000 },
+            { id: 'blood', title: '🩸 Кровавый Режим', desc: 'Зловещая багровая комната', cost: 350000 },
+            { id: 'storm', title: '🌧️ Шквал A200', desc: 'В 3x больше летающих лиц', cost: 800000 },
+            { id: 'crown', title: '👑 Золотая Корона', desc: 'Корона владыки A200', cost: 2000000 },
+            { id: 'goldFace', title: '🧀 Золотой A200', desc: 'Сверкающий золотой скин', cost: 5000000 },
+            { id: 'dice', title: '🎲 Шулерский Кубик', desc: '+10% к победе в рулетке', cost: 15000000 },
+            { id: 'energy', title: '⚡ Энергетик A200', desc: '+25% к пассивному доходу навсегда', cost: 50000000 }
+        ];
+
+        let state = {
+            score: 0,
+            totalEarned: 0,
+            tapPower: 1,
+            critChance: 5,
+            cps: 0,
+            rebirths: 0,
+            levels: { tapPower: 0, critChance: 0, radio: 0, flashlight: 0, door: 0, overload: 0 },
+            perks: {}
+        };
+
+        const saved = localStorage.getItem('a200_chaos_v4');
+        if (saved) {
+            try { state = Object.assign(state, JSON.parse(saved)); } catch(e){}
+        }
+
+        let selectedBet = 0;
+
+        const scoreEl = document.getElementById('score');
+        const cpsEl = document.getElementById('cps');
+        const clickTargetContainer = document.getElementById('clickTargetContainer');
+        const clickTarget = document.getElementById('clickTarget');
+        const rankTitleEl = document.getElementById('rankTitle');
+        const nextRankProgressEl = document.getElementById('nextRankProgress');
+        const rankBarEl = document.getElementById('rankBar');
+        const rebirthBadgeEl = document.getElementById('rebirthBadge');
+        const tabUpgradesEl = document.getElementById('tabUpgrades');
+        const tabPerksEl = document.getElementById('tabPerks');
+
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.content-panel').forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+
+            if (tabId === 'upgrades') document.getElementById('tabUpgrades').classList.add('active');
+            if (tabId === 'casino') document.getElementById('tabCasino').classList.add('active');
+            if (tabId === 'perks') document.getElementById('tabPerks').classList.add('active');
+            if (tabId === 'rebirth') document.getElementById('tabRebirth').classList.add('active');
+        }
+
+        function getUpgradeCost(cfg) {
+            const lvl = state.levels[cfg.id] || 0;
+            return Math.floor(cfg.baseCost * Math.pow(cfg.costMult, lvl));
+        }
+
+        function renderUpgrades() {
+            tabUpgradesEl.innerHTML = '';
+            UPGRADES_CONFIG.forEach(cfg => {
+                const lvl = state.levels[cfg.id] || 0;
+                const isMax = cfg.maxLvl && lvl >= cfg.maxLvl;
+                const cost = getUpgradeCost(cfg);
+
+                const btn = document.createElement('button');
+                btn.className = 'card-btn';
+                btn.disabled = isMax || state.score < cost;
+                btn.onclick = () => buyUpgrade(cfg);
+
+                btn.innerHTML = `
+                    <div class="btn-info">
+                        <div class="btn-title">${cfg.title}</div>
+                        <div class="btn-desc">${cfg.desc} (Ур. ${lvl})</div>
+                    </div>
+                    <div class="btn-cost">${isMax ? 'МАКС' : cost.toLocaleString() + ' 💰'}</div>
+                `;
+                tabUpgradesEl.appendChild(btn);
+            });
+        }
+
+        function renderPerks() {
+            tabPerksEl.innerHTML = '';
+            PERKS_CONFIG.forEach(cfg => {
+                const isBought = !!state.perks[cfg.id];
+                const btn = document.createElement('button');
+                btn.className = 'card-btn' + (isBought ? ' bought' : '');
+                btn.disabled = isBought || state.score < cfg.cost;
+                btn.onclick = () => buyPerk(cfg);
+
+                btn.innerHTML = `
+                    <div class="btn-info">
+                        <div class="btn-title">${cfg.title}</div>
+                        <div class="btn-desc">${cfg.desc}</div>
+                    </div>
+                    <div class="btn-cost">${isBought ? 'КУПЛЕНО ✔' : cfg.cost.toLocaleString() + ' 💰'}</div>
+                `;
+                tabPerksEl.appendChild(btn);
+            });
+        }
+
+        function applyPerksVisuals() {
+            document.getElementById('accGlasses').style.display = state.perks.glasses ? 'block' : 'none';
+            document.getElementById('accCrown').style.display = state.perks.crown ? 'block' : 'none';
+            clickTarget.classList.toggle('gold-face', !!state.perks.goldFace);
+            document.body.classList.toggle('disco-mode', !!state.perks.disco);
+            document.body.classList.toggle('blood-mode', !!state.perks.blood);
+        }
+
+        function buyUpgrade(cfg) {
+            const cost = getUpgradeCost(cfg);
+            if (state.score >= cost) {
+                state.score -= cost;
+                state.levels[cfg.id] = (state.levels[cfg.id] || 0) + 1;
+
+                if (cfg.type === 'tap') state.tapPower += cfg.value;
+                if (cfg.type === 'crit') state.critChance += cfg.value;
+                if (cfg.type === 'cps') state.cps += cfg.value;
+
+                playSound('buy');
+                if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+                updateUI();
+                saveGame();
+            }
+        }
+
+        function buyPerk(cfg) {
+            if (state.score >= cfg.cost && !state.perks[cfg.id]) {
+                state.score -= cfg.cost;
+                state.perks[cfg.id] = true;
+
+                playSound('win');
+                if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+                applyPerksVisuals();
+                updateUI();
+                saveGame();
+            }
+        }
+
+        // ==========================================
+        // 🌀 СИСТЕМА ПЕРЕРОЖДЕНИЯ
+        // ==========================================
+        function doRebirth() {
+            const cost = getRebirthCost(state.rebirths);
+            if (state.score >= cost) {
+                state.rebirths += 1;
+                state.score = 0;
+                state.tapPower = 1;
+                state.critChance = 5;
+                state.cps = 0;
+                state.levels = { tapPower: 0, critChance: 0, radio: 0, flashlight: 0, door: 0, overload: 0 };
+
+                playSound('rebirth');
+                if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+
+                updateUI();
+                saveGame();
+            }
+        }
+
+        function updateRebirthUI() {
+            const cost = getRebirthCost(state.rebirths);
+            const boostPercent = state.rebirths * 25;
+
+            rebirthBadgeEl.innerText = `🌀 ПЕРЕРОЖДЕНИЯ: ${state.rebirths} (+${boostPercent}%)`;
+            document.getElementById('rebirthLvlText').innerText = state.rebirths;
+            document.getElementById('rebirthBoostText').innerText = `+${boostPercent}%`;
+
+            const btn = document.getElementById('rebirthActionBtn');
+            btn.innerText = `ПЕРЕРОДИТЬСЯ (${cost.toLocaleString()} 💰)`;
+            btn.disabled = state.score < cost;
+        }
+
+        function updateUI() {
+            scoreEl.innerText = Math.floor(state.score).toLocaleString();
+            const multiplier = state.perks.energy ? 1.25 : 1.0;
+            const effectiveCps = Math.floor(state.cps * multiplier);
+            cpsEl.innerText = `В секунду: +${effectiveCps.toLocaleString()}`;
+
+            updateInfiniteRank();
+            renderUpgrades();
+            renderPerks();
+            updateBetUI();
+            updateRebirthUI();
+        }
+
+        // 🚪 Комнаты теперь идут по +10
+        function updateInfiniteRank() {
+            let rank = 1;
+            while (state.totalEarned >= getRankThreshold(rank)) {
+                rank++;
+            }
+            rank--;
+
+            const currentRoomNumber = (rank + 1) * 10;
+            rankTitleEl.innerText = `🚪Комната ${currentRoomNumber}`;
+
+            const curThresh = getRankThreshold(rank);
+            const nextThresh = getRankThreshold(rank + 1);
+            const diff = nextThresh - curThresh;
+            const progress = state.totalEarned - curThresh;
+            const percent = Math.min(100, Math.max(0, (progress / diff) * 100));
+
+            rankBarEl.style.width = `${percent}%`;
+            nextRankProgressEl.innerText = `${Math.floor(state.totalEarned).toLocaleString()} / ${nextThresh.toLocaleString()}`;
+        }
+
+        // ==========================================
+        // 🎰 РУЛЕТКА
+        // ==========================================
+        function setBetFraction(frac) {
+            selectedBet = Math.floor(state.score * frac);
+            updateBetUI();
+        }
+
+        function updateBetUI() {
+            if (selectedBet > state.score) selectedBet = state.score;
+            document.getElementById('currentBetText').innerText = `Ставка: ${selectedBet.toLocaleString()} 💰`;
+            document.getElementById('spinBtn').disabled = selectedBet <= 0 || isSpinning;
+        }
+
+        let isSpinning = false;
+        function spinRoulette() {
+            if (isSpinning || selectedBet <= 0 || state.score < selectedBet) return;
+
+            isSpinning = true;
+            const bet = selectedBet;
+            state.score -= bet;
+            updateUI();
+
+            const rouletteDisplay = document.getElementById('rouletteDisplay');
+            const spinBtn = document.getElementById('spinBtn');
+            spinBtn.disabled = true;
+
+            const luckBonus = state.perks.dice ? 10 : 0;
+            const roll = Math.random() * 100;
+
+            let outcome;
+            if (roll < (30 - luckBonus / 2)) {
+                outcome = { mult: 0, text: '💀 0x (СЛИВ)', sound: 'lose' };
+            } else if (roll < (60 - luckBonus / 2)) {
+                outcome = { mult: 0.5, text: '📉 0.5x (ПОЛОВИНА)', sound: 'lose' };
+            } else if (roll < (85 + luckBonus / 2)) {
+                outcome = { mult: 1.5, text: '📈 1.5x (ВЫИГРЫШ)', sound: 'win' };
+            } else if (roll < 97) {
+                outcome = { mult: 2.0, text: '🔥 2.0x (УДВОЕНИЕ)', sound: 'win' };
+            } else {
+                outcome = { mult: 3.0, text: '👑 3.0x (ДЖЕКПОТ!)', sound: 'win' };
+            }
+
+            let ticks = 0;
+            const fakeOutcomes = ['0x 💀', '0.5x 📉', '1.5x 📈', '2.0x 🔥', '3.0x 👑'];
+            const interval = setInterval(() => {
+                rouletteDisplay.innerText = fakeOutcomes[ticks % fakeOutcomes.length];
+                playSound('click');
+                ticks++;
+
+                if (ticks > 15) {
+                    clearInterval(interval);
+                    isSpinning = false;
+                    
+                    const winnings = Math.floor(bet * outcome.mult);
+                    state.score += winnings;
+                    if (winnings > bet) state.totalEarned += (winnings - bet);
+
+                    rouletteDisplay.innerText = outcome.text;
+                    playSound(outcome.sound);
+
+                    if (tg?.HapticFeedback) {
+                        tg.HapticFeedback.notificationOccurred(outcome.mult >= 1.5 ? 'success' : 'error');
+                    }
+
+                    selectedBet = 0;
+                    updateUI();
+                    saveGame();
+                }
+            }, 100);
+        }
+
+        // ==========================================
+        // 🌀 КЛИК ПО A200 С УЧЁТОМ ПЕРЕРОЖДЕНИЙ
+        // ==========================================
+        let currentAngle = 0;
+
+        clickTargetContainer.addEventListener('pointerdown', (e) => {
+            const isCrit = Math.random() * 100 < state.critChance;
+            
+            // Расчет буста от перерождений (+25% за каждый уровень)
+            const rebirthMultiplier = 1 + (state.rebirths * 0.25);
+            const baseDamage = state.tapPower * rebirthMultiplier;
+            const finalDamage = Math.max(1, Math.floor(isCrit ? baseDamage * 5 : baseDamage));
+
+            state.score += finalDamage;
+            state.totalEarned += finalDamage;
+
+            playSound(isCrit ? 'crit' : 'click');
+
+            if (tg?.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred(isCrit ? 'heavy' : 'medium');
+            }
+
+            currentAngle = Math.floor(Math.random() * 91) - 45;
+            clickTargetContainer.style.transform = `scale(${isCrit ? 0.8 : 0.88}) rotate(${currentAngle}deg)`;
+
+            scoreEl.classList.remove('bounce');
+            void scoreEl.offsetWidth;
+            scoreEl.classList.add('bounce');
+
+            createFloatText(e.clientX, e.clientY, `+${finalDamage}`, isCrit);
+
+            const count = (isCrit ? 10 : 3) * (state.perks.storm ? 3 : 1);
+            spawnFallingFaces(e.clientX, e.clientY, count);
+
+            updateUI();
+        });
+
+        window.addEventListener('pointerup', () => {
+            setTimeout(() => {
+                clickTargetContainer.style.transform = `scale(1) rotate(${currentAngle}deg)`;
+            }, 80);
+        });
+
+        function spawnFallingFaces(startX, startY, count) {
+            for (let i = 0; i < Math.min(count, 20); i++) {
+                const face = document.createElement('img');
+                face.src = 'face.png';
+                face.className = 'falling-face' + (state.perks.goldFace ? ' gold-face' : '');
+                face.style.left = `${startX - 15}px`;
+                face.style.top = `${startY - 15}px`;
+
+                const popX = (Math.random() - 0.5) * 160;
+                const popY = - (30 + Math.random() * 70);
+                const endX = popX + (Math.random() - 0.5) * 120;
+                const endY = 250 + Math.random() * 250;
+
+                const midRot = (Math.random() - 0.5) * 180;
+                const endRot = midRot + (Math.random() - 0.5) * 360;
+                const duration = 0.7 + Math.random() * 0.4;
+
+                face.style.setProperty('--pop-x', `${popX}px`);
+                face.style.setProperty('--pop-y', `${popY}px`);
+                face.style.setProperty('--end-x', `${endX}px`);
+                face.style.setProperty('--end-y', `${endY}px`);
+                face.style.setProperty('--mid-rot', `${midRot}deg`);
+                face.style.setProperty('--end-rot', `${endRot}deg`);
+                face.style.setProperty('--duration', `${duration}s`);
+
+                document.body.appendChild(face);
+                setTimeout(() => face.remove(), duration * 1000);
+            }
+        }
+
+        function createFloatText(x, y, text, isCrit) {
+            const el = document.createElement('div');
+            el.className = 'float-text' + (isCrit ? ' crit' : '');
+            el.innerText = isCrit ? `${text} CRIT!` : text;
+            el.style.left = `${x - 25}px`;
+            el.style.top = `${y - 25}px`;
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), 700);
+        }
+
+        setInterval(() => {
+            if (state.cps > 0) {
+                const multiplier = state.perks.energy ? 1.25 : 1.0;
+                const earned = Math.floor(state.cps * multiplier);
+                state.score += earned;
+                state.totalEarned += earned;
+                updateUI();
+            }
+        }, 1000);
+
+        function saveGame() {
+            localStorage.setItem('a200_chaos_v4', JSON.stringify(state));
+        }
+        setInterval(saveGame, 3000);
+
+        applyPerksVisuals();
+        updateUI();
+    </script>
+</body>
+</html>
