@@ -1271,16 +1271,16 @@
                     room: Number(currentRoom || 10),
                     save_data: state,
                     updated_at: new Date().toISOString()
-                });
+                }, { onConflict: 'user_id' }); // 👈 Явно указываем ключ конфликта
 
                 if (error) {
-                    console.error("Ошибка сохранения в Supabase:", error);
-                    document.getElementById('cloudStatus').innerText = '⚠️ Ошибка БД';
+                    console.error("Save error:", error);
+                    document.getElementById('cloudStatus').innerText = `⚠️ ${error.message}`;
                 } else {
                     document.getElementById('cloudStatus').innerText = '☁️ Сохранено';
                 }
             } catch(e) {
-                document.getElementById('cloudStatus').innerText = '⚠️ Офлайн';
+                document.getElementById('cloudStatus').innerText = `⚠️ ${e.message}`;
             }
         }
         setInterval(saveGame, 5000);
