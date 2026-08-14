@@ -363,12 +363,25 @@
         }
         .card-btn:not(:disabled):active { transform: scale(0.97); }
         .card-btn:disabled { opacity: 0.35; filter: grayscale(0.8); cursor: not-allowed; }
-        .card-btn.bought { border-color: #4cd964; background: rgba(76, 217, 100, 0.1); }
+
+        /* ✨ Стили тумблеров приколов */
+        .card-btn.perk-on {
+            border-color: #4cd964;
+            background: rgba(76, 217, 100, 0.12);
+            box-shadow: 0 0 10px rgba(76, 217, 100, 0.15);
+        }
+        .card-btn.perk-off {
+            border-color: rgba(255, 255, 255, 0.15);
+            background: rgba(26, 26, 30, 0.6);
+            opacity: 0.7;
+        }
 
         .btn-info { text-align: left; }
         .btn-title { font-size: 13px; font-weight: 700; }
         .btn-desc { font-size: 11px; color: #8e8e93; margin-top: 1px; }
         .btn-cost { font-size: 13px; font-weight: 800; color: #ff9500; }
+        .badge-on { font-size: 12px; font-weight: 900; color: #4cd964; }
+        .badge-off { font-size: 12px; font-weight: 900; color: #ff3344; }
 
         /* 🥇🥈🥉 СТИЛИ ЛИДЕРБОРДА ТОП-3 */
         .leaderboard-box {
@@ -631,7 +644,7 @@
 
     <script>
         // ==========================================
-        // 🔒 ПРОВЕРКА TELEGRAM (ОДИН РАЗ)
+        // 🔒 ПРОВЕРКА TELEGRAM
         // ==========================================
         const tg = window.Telegram?.WebApp;
         const isInsideTelegram = Boolean(tg && tg.initData && tg.initData.length > 0);
@@ -644,7 +657,6 @@
         tg.ready();
         tg.expand();
 
-        // Защита от F12 и ПКМ
         document.addEventListener('contextmenu', e => e.preventDefault());
         document.addEventListener('keydown', e => {
             if (e.keyCode === 123 || (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74))) {
@@ -661,7 +673,8 @@
         let db = null;
         try {
             if (SUPABASE_URL.includes("http") && !SUPABASE_URL.includes("ВАШ_ПРОЕКТ")) {
-                db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                const parsedUrl = new URL(SUPABASE_URL.trim());
+                db = window.supabase.createClient(parsedUrl.origin, SUPABASE_KEY.trim());
             }
         } catch(e) { console.error("Supabase init error", e); }
 
@@ -693,7 +706,7 @@
             if (type === 'click') {
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
-                const isBass = state.perks.bassboost;
+                const isBass = isPerkActive('bassboost');
                 osc.type = isBass ? 'triangle' : 'sawtooth';
                 osc.frequency.setValueAtTime(isBass ? 110 : (240 + Math.random() * 100), now);
                 osc.frequency.exponentialRampToValueAtTime(isBass ? 20 : 40, now + 0.08);
@@ -830,6 +843,7 @@
             rebirths: 0,
             levels: { tapPower: 0, critChance: 0, radio: 0, flashlight: 0, door: 0, overload: 0 },
             perks: {},
+            enabledPerks: {}, // Хранит состояние ВКЛ / ВЫКЛ купленных приколов
             trophies: {}
         };
 
@@ -841,6 +855,13 @@
             }
         }
         if (!state.trophies) state.trophies = {};
+        if (!state.enabledPerks) state.enabledPerks = {};
+
+        // Проверка: активен ли прикол прямо сейчас
+        function isPerkActive(id) {
+            if (!state.perks || !state.perks[id]) return false;
+            return state.enabledPerks[id] !== false; // По умолчанию включен, если куплен
+        }
 
         let selectedBet = 0;
 
@@ -900,24 +921,55 @@
             });
         }
 
+        // ✨ Рендер магазина приколов с тумблерами ВКЛ / ВЫКЛ
         function renderPerks() {
             tabPerksEl.innerHTML = '';
             PERKS_CONFIG.forEach(cfg => {
                 const isBought = !!state.perks[cfg.id];
-                const btn = document.createElement('button');
-                btn.className = 'card-btn' + (isBought ? ' bought' : '');
-                btn.disabled = isBought || state.score < cfg.cost;
-                btn.onclick = () => buyPerk(cfg);
+                const active = isPerkActive(cfg.id);
 
-                btn.innerHTML = `
-                    <div class="btn-info">
-                        <div class="btn-title">${cfg.title}</div>
-                        <div class="btn-desc">${cfg.desc}</div>
-                    </div>
-                    <div class="btn-cost">${isBought ? 'КУПЛЕНО ✔' : cfg.cost.toLocaleString() + ' 💰'}</div>
-                `;
+                const btn = document.createElement('button');
+                
+                if (!isBought) {
+                    btn.className = 'card-btn';
+                    btn.disabled = state.score < cfg.cost;
+                    btn.onclick = () => buyPerk(cfg);
+                    btn.innerHTML = `
+                        <div class="btn-info">
+                            <div class="btn-title">${cfg.title}</div>
+                            <div class="btn-desc">${cfg.desc}</div>
+                        </div>
+                        <div class="btn-cost">${cfg.cost.toLocaleString()} 💰</div>
+                    `;
+                } else {
+                    btn.className = `card-btn ${active ? 'perk-on' : 'perk-off'}`;
+                    btn.onclick = () => togglePerk(cfg.id);
+                    btn.innerHTML = `
+                        <div class="btn-info">
+                            <div class="btn-title">${cfg.title}</div>
+                            <div class="btn-desc">${cfg.desc}</div>
+                        </div>
+                        <div class="${active ? 'badge-on' : 'badge-off'}">${active ? 'ВКЛ 🟢' : 'ВЫКЛ 🔴'}</div>
+                    `;
+                }
+
                 tabPerksEl.appendChild(btn);
             });
+        }
+
+        // Переключение купленного прикола
+        function togglePerk(id) {
+            if (!state.perks || !state.perks[id]) return;
+            if (!state.enabledPerks) state.enabledPerks = {};
+
+            state.enabledPerks[id] = !isPerkActive(id);
+
+            playSound('click');
+            if (tg?.HapticFeedback) tg.HapticFeedback.selectionChanged();
+
+            applyPerksVisuals();
+            updateUI();
+            saveGame();
         }
 
         function renderTrophies() {
@@ -970,11 +1022,11 @@
         }
 
         function applyPerksVisuals() {
-            document.getElementById('accGlasses').style.display = state.perks.glasses ? 'block' : 'none';
-            document.getElementById('accCrown').style.display = state.perks.crown ? 'block' : 'none';
-            clickTarget.classList.toggle('gold-face', !!state.perks.goldFace);
-            document.body.classList.toggle('disco-mode', !!state.perks.disco);
-            document.body.classList.toggle('blood-mode', !!state.perks.blood);
+            document.getElementById('accGlasses').style.display = isPerkActive('glasses') ? 'block' : 'none';
+            document.getElementById('accCrown').style.display = isPerkActive('crown') ? 'block' : 'none';
+            clickTarget.classList.toggle('gold-face', isPerkActive('goldFace'));
+            document.body.classList.toggle('disco-mode', isPerkActive('disco'));
+            document.body.classList.toggle('blood-mode', isPerkActive('blood'));
         }
 
         function buyUpgrade(cfg) {
@@ -998,6 +1050,8 @@
             if (state.score >= cfg.cost && !state.perks[cfg.id]) {
                 state.score -= cfg.cost;
                 state.perks[cfg.id] = true;
+                if (!state.enabledPerks) state.enabledPerks = {};
+                state.enabledPerks[cfg.id] = true;
 
                 playSound('win');
                 if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
@@ -1046,7 +1100,7 @@
 
         function updateUI() {
             scoreEl.innerText = Math.floor(state.score).toLocaleString();
-            const multiplier = state.perks.energy ? 1.25 : 1.0;
+            const multiplier = isPerkActive('energy') ? 1.25 : 1.0;
             const effectiveCps = Math.floor(state.cps * multiplier);
             cpsEl.innerText = `В секунду: +${effectiveCps.toLocaleString()}`;
 
@@ -1102,7 +1156,7 @@
             const spinBtn = document.getElementById('spinBtn');
             spinBtn.disabled = true;
 
-            const luckBonus = state.perks.dice ? 10 : 0;
+            const luckBonus = isPerkActive('dice') ? 10 : 0;
             const roll = Math.random() * 100;
 
             let outcome;
@@ -1173,7 +1227,7 @@
 
             createFloatText(e.clientX, e.clientY, `+${finalDamage}`, isCrit);
 
-            const count = (isCrit ? 10 : 3) * (state.perks.storm ? 3 : 1);
+            const count = (isCrit ? 10 : 3) * (isPerkActive('storm') ? 3 : 1);
             spawnFallingFaces(e.clientX, e.clientY, count);
 
             updateUI();
@@ -1189,7 +1243,7 @@
             for (let i = 0; i < Math.min(count, 20); i++) {
                 const face = document.createElement('img');
                 face.src = 'face.png';
-                face.className = 'falling-face' + (state.perks.goldFace ? ' gold-face' : '');
+                face.className = 'falling-face' + (isPerkActive('goldFace') ? ' gold-face' : '');
                 face.style.left = `${startX - 15}px`;
                 face.style.top = `${startY - 15}px`;
 
@@ -1227,7 +1281,7 @@
 
         setInterval(() => {
             if (state.cps > 0) {
-                const multiplier = state.perks.energy ? 1.25 : 1.0;
+                const multiplier = isPerkActive('energy') ? 1.25 : 1.0;
                 const earned = Math.floor(state.cps * multiplier);
                 state.score += earned;
                 state.totalEarned += earned;
@@ -1235,8 +1289,8 @@
             }
         }, 1000);
 
-// ==========================================
-        // 🌐 УЛУЧШЕННОЕ СОХРАНЕНИЕ С ПРОВЕРКОЙ ОШИБОК
+        // ==========================================
+        // 🌐 ОБЛАЧНОЕ СОХРАНЕНИЕ И ЛИДЕРБОРД
         // ==========================================
         async function loadCloudSave() {
             if (!db) return;
@@ -1249,6 +1303,7 @@
 
                 if (data && data.save_data) {
                     state = Object.assign(state, data.save_data);
+                    if (!state.enabledPerks) state.enabledPerks = {};
                     document.getElementById('cloudStatus').innerText = '☁️ В сети';
                     applyPerksVisuals();
                     updateUI();
@@ -1271,16 +1326,16 @@
                     room: Number(currentRoom || 10),
                     save_data: state,
                     updated_at: new Date().toISOString()
-                }, { onConflict: 'user_id' }); // 👈 Явно указываем ключ конфликта
+                }, { onConflict: 'user_id' });
 
                 if (error) {
                     console.error("Save error:", error);
-                    document.getElementById('cloudStatus').innerText = `⚠️ ${error.message}`;
+                    document.getElementById('cloudStatus').innerText = '⚠️ Ошибка';
                 } else {
                     document.getElementById('cloudStatus').innerText = '☁️ Сохранено';
                 }
             } catch(e) {
-                document.getElementById('cloudStatus').innerText = `⚠️ ${e.message}`;
+                document.getElementById('cloudStatus').innerText = '⚠️ Офлайн';
             }
         }
         setInterval(saveGame, 5000);
@@ -1297,7 +1352,6 @@
             }
 
             try {
-                // Запрос топа по перерождениям и очкам
                 const { data, error } = await db
                     .from('players')
                     .select('username, rebirths, room, score')
@@ -1311,7 +1365,7 @@
                 }
 
                 if (!data || data.length === 0) {
-                    listEl.innerHTML = '<div style="color:#aaa; font-size:12px; text-align:center; padding:15px;">Пока нет записей. Сделайте клик и подождите 5 сек!</div>';
+                    listEl.innerHTML = '<div style="color:#aaa; font-size:12px; text-align:center; padding:15px;">Пока нет записей в топе!</div>';
                     return;
                 }
 
@@ -1326,7 +1380,7 @@
                             <div class="leader-medal">${medals[idx] || '🎖️'}</div>
                             <div>
                                 <div class="leader-name">${p.username || 'Аноним'}</div>
-                                <div class="leader-stats">🌀 Ребилд: ${p.rebirths} | 🚪Комната ${p.room}</div>
+                                <div class="leader-stats">🌀 Перерождений: ${p.rebirths} | 🚪Комната ${p.room}</div>
                             </div>
                         </div>
                         <div class="leader-score">${Math.floor(p.score).toLocaleString()} 💰</div>
@@ -1334,7 +1388,7 @@
                     listEl.appendChild(item);
                 });
             } catch(e) {
-                listEl.innerHTML = `<div style="color:#ff3344; font-size:12px; text-align:center;">Ошибка подключения: ${e.message}</div>`;
+                listEl.innerHTML = `<div style="color:#ff3344; font-size:12px; text-align:center;">Ошибка подключения</div>`;
             }
         }
 
