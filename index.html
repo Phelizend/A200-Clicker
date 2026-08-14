@@ -504,6 +504,17 @@
     </style>
 </head>
 <body>
+    <!-- Экран блокировки для обычных браузеров -->
+<div id="blockScreen" style="display: none; position: fixed; inset: 0; background: #08080a; z-index: 99999; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center;">
+    <div style="font-size: 60px; margin-bottom: 10px;">🚫</div>
+    <h2 style="color: #ff3344; font-size: 22px; font-weight: 900; margin-bottom: 8px;">ДОСТУП ЗАБЛОКИРОВАН</h2>
+    <p style="color: #888; font-size: 13px; max-width: 280px; line-height: 1.5; margin-bottom: 20px;">
+        Игра A200 доступна только внутри официального Telegram MiniApp.
+    </p>
+    <a href="https://t.me/A200Clicker_bot" style="background: #00e5ff; color: #000; padding: 12px 24px; border-radius: 10px; font-weight: 900; text-decoration: none; font-size: 14px;">
+        ОТКРЫТЬ В TELEGRAM 🚀
+    </a>
+</div>
 
     <!-- 🏆 ВСПЛЫВАЮЩИЙ ПОПАП -->
     <div class="trophy-popup" id="trophyPopup">
@@ -608,6 +619,25 @@
     </div>
 
     <script>
+
+        const tg = window.Telegram?.WebApp;
+
+    // 🔒 Проверка: запущен ли сайт внутри Telegram
+    const isInsideTelegram = Boolean(tg && tg.initData && tg.initData.length > 0);
+
+    if (!isInsideTelegram) {
+        // Если открыто вне Telegram — показываем заглушку и останавливаем игру
+        document.getElementById('blockScreen').style.display = 'flex';
+        throw new Error("Direct web access blocked");
+    }
+
+    // Защита от открытия консоли клавишами F12, Ctrl+Shift+I и ПКМ
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.addEventListener('keydown', e => {
+    if (e.keyCode === 123 || (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74))) {
+        e.preventDefault();
+    }
+    });
         // ==========================================
         // 🔑 SUPABASE НАСТРОЙКИ (ВСТАВЬТЕ СЮДА ВАШИ ДАННЫЕ)
         // ==========================================
