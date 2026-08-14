@@ -790,13 +790,15 @@
         // 🎮 ИГРОВОЙ ДВИЖОК
         // ==========================================
         function getRankThreshold(rankIndex) {
-            if (rankIndex <= 0) return 0;
-            if (rankIndex <= 10) {
-                return Math.floor(150 * (rankIndex * (rankIndex + 1)) / 2);
+           if (rankIndex <= 0) return 0;
+            if (rankIndex <= 15) {
+                // Плавная арифметика до Комнаты 150
+                return Math.floor(80 * (rankIndex * (rankIndex + 1)) / 2);
             } else {
-                const baseAt10 = Math.floor(150 * (10 * 11) / 2);
-                const extra = rankIndex - 10;
-                return Math.floor(baseAt10 * Math.pow(1.38, extra));
+                // Мягкий рост (1.13 вместо 1.38)
+                const baseAt15 = Math.floor(80 * (15 * 16) / 2); // 9600
+                const extra = rankIndex - 15;
+                return Math.floor(baseAt15 * Math.pow(1.13, extra));
             }
         }
 
