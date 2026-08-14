@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>A200 Кликер</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Подключаем клиент Supabase напрямую без сервера -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         * {
@@ -28,6 +27,20 @@
             overflow: hidden;
             position: relative;
             transition: background 0.5s ease;
+        }
+
+        /* 🚫 Экран блокировки для обычного браузера */
+        #blockScreen {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: #08080a;
+            z-index: 99999;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
         }
 
         body.disco-mode { animation: discoBg 6s linear infinite alternate; }
@@ -504,17 +517,15 @@
     </style>
 </head>
 <body>
-    <!-- Экран блокировки для обычных браузеров -->
-<div id="blockScreen" style="display: none; position: fixed; inset: 0; background: #08080a; z-index: 99999; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center;">
-    <div style="font-size: 60px; margin-bottom: 10px;">🚫</div>
-    <h2 style="color: #ff3344; font-size: 22px; font-weight: 900; margin-bottom: 8px;">ДОСТУП ЗАБЛОКИРОВАН</h2>
-    <p style="color: #888; font-size: 13px; max-width: 280px; line-height: 1.5; margin-bottom: 20px;">
-        Игра A200 доступна только внутри официального Telegram MiniApp.
-    </p>
-    <a href="https://t.me/A200Clicker_bot" style="background: #00e5ff; color: #000; padding: 12px 24px; border-radius: 10px; font-weight: 900; text-decoration: none; font-size: 14px;">
-        ОТКРЫТЬ В TELEGRAM 🚀
-    </a>
-</div>
+
+    <!-- 🚫 ЭКРАН ЗАЩИТЫ ОТ БРАУЗЕРА -->
+    <div id="blockScreen">
+        <div style="font-size: 50px; margin-bottom: 10px;">🚫</div>
+        <h2 style="color: #ff3344; font-size: 20px; font-weight: 900; margin-bottom: 8px;">ДОСТУП ЗАБЛОКИРОВАН</h2>
+        <p style="color: #888; font-size: 12px; max-width: 280px; line-height: 1.5; margin-bottom: 20px;">
+            Игра A200 доступна только внутри официального Telegram MiniApp.
+        </p>
+    </div>
 
     <!-- 🏆 ВСПЛЫВАЮЩИЙ ПОПАП -->
     <div class="trophy-popup" id="trophyPopup">
@@ -594,7 +605,7 @@
     <div class="content-panel" id="tabLeaderboard">
         <div class="leaderboard-box">
             <div style="font-size: 12px; font-weight: 800; color: #ffd700; text-align: center; margin-bottom: 4px;">
-                👑 ТОП-3 ИГРОКОВ
+                👑 ТОП-3 ИГРОКОВ КЛИКЕРА
             </div>
             <div id="leaderboardList" style="display: flex; flex-direction: column; gap: 6px;">
                 <div style="color: #888; font-size: 12px; text-align: center; padding: 15px;">Загрузка топа...</div>
@@ -619,30 +630,33 @@
     </div>
 
     <script>
-
+        // ==========================================
+        // 🔒 ПРОВЕРКА TELEGRAM (ОДИН РАЗ)
+        // ==========================================
         const tg = window.Telegram?.WebApp;
+        const isInsideTelegram = Boolean(tg && tg.initData && tg.initData.length > 0);
 
-    // 🔒 Проверка: запущен ли сайт внутри Telegram
-    const isInsideTelegram = Boolean(tg && tg.initData && tg.initData.length > 0);
+        if (!isInsideTelegram) {
+            document.getElementById('blockScreen').style.display = 'flex';
+            throw new Error("Direct browser access blocked");
+        }
 
-    if (!isInsideTelegram) {
-        // Если открыто вне Telegram — показываем заглушку и останавливаем игру
-        document.getElementById('blockScreen').style.display = 'flex';
-        throw new Error("Direct web access blocked");
-    }
+        tg.ready();
+        tg.expand();
 
-    // Защита от открытия консоли клавишами F12, Ctrl+Shift+I и ПКМ
-    document.addEventListener('contextmenu', e => e.preventDefault());
-    document.addEventListener('keydown', e => {
-    if (e.keyCode === 123 || (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74))) {
-        e.preventDefault();
-    }
-    });
+        // Защита от F12 и ПКМ
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('keydown', e => {
+            if (e.keyCode === 123 || (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74))) {
+                e.preventDefault();
+            }
+        });
+
         // ==========================================
-        // 🔑 SUPABASE НАСТРОЙКИ (ВСТАВЬТЕ СЮДА ВАШИ ДАННЫЕ)
+        // 🔑 SUPABASE НАСТРОЙКИ
         // ==========================================
-        const SUPABASE_URL = "https://dyvotapsgnpltbieoxzb.supabase.co"; 
-        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR5dm90YXBzZ25wbHRiaWVveHpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3MTMyMDUsImV4cCI6MjEwMjI4OTIwNX0.Ig6eXMTfM9MTmGHh1fD6Ys7vwXHKMBH3qFY0jZfhI6Q";
+        const SUPABASE_URL = "https://ВАШ_ПРОЕКТ.supabase.co"; 
+        const SUPABASE_KEY = "ВАШ_ANON_PUBLIC_KEY";
 
         let db = null;
         try {
@@ -651,10 +665,6 @@
             }
         } catch(e) { console.error("Supabase init error", e); }
 
-        const tg = window.Telegram?.WebApp;
-        if (tg) { tg.ready(); tg.expand(); }
-
-        // Получаем Telegram ID и Никнейм
         const userTelegram = tg?.initDataUnsafe?.user;
         const currentUserId = userTelegram?.id ? String(userTelegram.id) : (localStorage.getItem('guest_uid') || ('guest_' + Math.floor(Math.random()*1000000)));
         localStorage.setItem('guest_uid', currentUserId);
@@ -823,7 +833,6 @@
             trophies: {}
         };
 
-        // Локальное восстановление
         const saveKeys = ['a200_chaos_v5', 'a200_chaos_v4', 'a200_chaos_v3'];
         for (const key of saveKeys) {
             const saved = localStorage.getItem(key);
@@ -1069,9 +1078,6 @@
             checkTrophies(currentRoomNumber);
         }
 
-        // ==========================================
-        // 🎰 РУЛЕТКА
-        // ==========================================
         function setBetFraction(frac) {
             selectedBet = Math.floor(state.score * frac);
             updateBetUI();
@@ -1141,9 +1147,6 @@
             }, 100);
         }
 
-        // ==========================================
-        // 🌀 КЛИК ПО A200
-        // ==========================================
         let currentAngle = 0;
 
         clickTargetContainer.addEventListener('pointerdown', (e) => {
@@ -1250,7 +1253,7 @@
                     applyPerksVisuals();
                     updateUI();
                 }
-            } catch(e) { console.warn("Облако пока не подключено или офлайн"); }
+            } catch(e) { console.warn("Облако офлайн"); }
         }
 
         async function saveGame() {
@@ -1276,7 +1279,6 @@
         }
         setInterval(saveGame, 5000);
 
-        // Загрузка ТОП-3
         async function fetchLeaderboard() {
             const listEl = document.getElementById('leaderboardList');
             if (!db) {
