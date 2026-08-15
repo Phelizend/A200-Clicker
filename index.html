@@ -530,6 +530,12 @@
     </style>
 </head>
 <body>
+    <!-- 🔄 ЭКРАН СИНХРОНИЗАЦИИ ОБЛАКА -->
+    <div id="cloudLoadingScreen" style="position: fixed; inset: 0; background: #08080a; z-index: 99998; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.3s;">
+        <div style="font-size: 40px; margin-bottom: 12px; animation: pulseHalo 1.5s infinite alternate;">☁️</div>
+        <div style="color: #00e5ff; font-weight: 800; font-size: 14px; letter-spacing: 1px;">СИНХРОНИЗАЦИЯ С ОБЛАКОМ...</div>
+        <div style="color: #888; font-size: 11px; margin-top: 6px;">Загружаем данные твоего аккаунта</div>
+    </div>
 
     <!-- 🚫 ЭКРАН ЗАЩИТЫ ОТ БРАУЗЕРА -->
     <div id="blockScreen">
@@ -1292,28 +1298,71 @@
         }, 1000);
 
         // ==========================================
-        // 🌐 ОБЛАЧНОЕ СОХРАНЕНИЕ И ЛИДЕРБОРД
+        // 🌐 БРОНЕБОЙНОЕ ОБЛАЧНОЕ СОХРАНЕНИЕ
         // ==========================================
+        let isCloudLoaded = false; // Блокиратор перезаписи
+
         async function loadCloudSave() {
-            if (!db) return;
+            const loadingScreen = document.getElementById('cloudLoadingScreen');
+
+            // Тайм-аут на случай медленного интернета (максимум 2.5 сек)
+            const fallbackTimer = setTimeout(() => {
+                if (!isCloudLoaded) {
+                    isCloudLoaded = true;
+                    if (loadingScreen) loadingScreen.style.display = 'none';
+                    updateUI();
+                }
+            }, 2500);
+
+            if (!db) {
+                isCloudLoaded = true;
+                if (loadingScreen) loadingScreen.style.display = 'none';
+                return;
+            }
+
             try {
                 const { data, error } = await db
                     .from('players')
-                    .select('save_data')
-                    .eq('user_id', currentUserId)
+                    .select('save_data, total_earned, rebirths')
+                    .eq('user_id', String(currentUserId))
                     .single();
 
                 if (data && data.save_data) {
-                    state = Object.assign(state, data.save_data);
+                    const cloudSave = data.save_data;
+                    
+                    // Умное сравнение: берем то, где прогресс дальше
+                    const cloudEarned = Number(data.total_earned || cloudSave.totalEarned || 0);
+                    const localEarned = Number(state.totalEarned || 0);
+
+                    if (cloudEarned >= localEarned || Number(data.rebirths || 0) >= Number(state.rebirths || 0)) {
+                        state = Object.assign(state, cloudSave);
+                    }
+
                     if (!state.enabledPerks) state.enabledPerks = {};
+                    if (!state.trophies) state.trophies = {};
+
+                    // Обновляем локальное хранилище актуальными данными из облака
+                    localStorage.setItem('a200_chaos_v5', JSON.stringify(state));
                     document.getElementById('cloudStatus').innerText = '☁️ В сети';
-                    applyPerksVisuals();
-                    updateUI();
                 }
-            } catch(e) { console.warn("Облако офлайн"); }
+            } catch(e) {
+                console.warn("Ошибка загрузки облака:", e);
+            } finally {
+                clearTimeout(fallbackTimer);
+                isCloudLoaded = true;
+                if (loadingScreen) {
+                    loadingScreen.style.opacity = '0';
+                    setTimeout(() => loadingScreen.style.display = 'none', 300);
+                }
+                applyPerksVisuals();
+                updateUI();
+            }
         }
 
         async function saveGame() {
+            // 🛑 НЕ сохраняем локальные нули в базу, пока облако не загрузилось!
+            if (!isCloudLoaded) return;
+
             localStorage.setItem('a200_chaos_v5', JSON.stringify(state));
 
             if (!db) return;
