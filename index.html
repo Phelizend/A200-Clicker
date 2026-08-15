@@ -1479,7 +1479,7 @@
         }, 1000);
 
         // ==========================================
-        // 💤 СИСТЕМА ОФФЛАЙН-ДОХОДА
+        // 💤 СИСТЕМА ОФФЛАЙН-ДОХОДА (С СЕКУНДАМИ)
         // ==========================================
         function checkOfflineIncome() {
             const now = Date.now();
@@ -1492,8 +1492,8 @@
             const multiplier = isPerkActive('energy') ? 1.25 : 1.0;
             const effectiveCps = Math.floor(state.cps * multiplier);
 
-            // Если прошло больше 30 секунд и есть доход
-            if (cappedSeconds >= 30 && effectiveCps > 0) {
+            // Срабатывает даже от 5 секунд отсутствия!
+            if (cappedSeconds >= 5 && effectiveCps > 0) {
                 pendingOfflineReward = Math.floor(cappedSeconds * effectiveCps);
 
                 if (pendingOfflineReward > 0) {
@@ -1506,13 +1506,16 @@
             state.lastOnline = now;
         }
 
+        // Красивый формат времени: секунды, минуты и часы
         function formatOfflineTime(seconds) {
             const hours = Math.floor(seconds / 3600);
             const minutes = Math.floor((seconds % 3600) / 60);
-            if (hours > 0) return `${hours} ч ${minutes} мин`;
-            return `${minutes} мин`;
-        }
+            const secs = seconds % 60;
 
+            if (hours > 0) return `${hours} ч ${minutes} мин`;
+            if (minutes > 0) return `${minutes} мин ${secs} сек`;
+            return `${secs} сек`; // Если меньше минуты — пишет секунды (например: "24 сек")
+        }
         function claimOfflineReward() {
             if (pendingOfflineReward > 0) {
                 state.score += pendingOfflineReward;
