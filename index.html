@@ -1492,9 +1492,10 @@
             const multiplier = isPerkActive('energy') ? 1.25 : 1.0;
             const effectiveCps = Math.floor(state.cps * multiplier);
 
-            // Срабатывает даже от 5 секунд отсутствия!
+            // Срабатывает от 5 секунд отсутствия
             if (cappedSeconds >= 5 && effectiveCps > 0) {
-                pendingOfflineReward = Math.floor(cappedSeconds * effectiveCps);
+                // 🤫 Тихий нерф оффлайн-дохода в 5 раз:
+                pendingOfflineReward = Math.floor((cappedSeconds * effectiveCps) / 5);
 
                 if (pendingOfflineReward > 0) {
                     const timeString = formatOfflineTime(cappedSeconds);
