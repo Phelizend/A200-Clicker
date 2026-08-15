@@ -56,12 +56,12 @@
             transition: opacity 0.3s;
         }
 
-        /* 🎁 МОДАЛЬНОЕ ОКНО ПРОМОКОДОВ */
+        /* 💤 ОКНО ОФФЛАЙН-ДОХОДА И ПРОМОКОДОВ */
         .modal-overlay {
             display: none;
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.75);
+            background: rgba(0, 0, 0, 0.8);
             backdrop-filter: blur(8px);
             z-index: 10000;
             align-items: center;
@@ -643,6 +643,18 @@
         <div style="color: #888; font-size: 11px; margin-top: 6px;">Загружаем данные аккаунта</div>
     </div>
 
+    <!-- 💤 ОКНО ОФФЛАЙН-ДОХОДА -->
+    <div class="modal-overlay" id="offlineModal">
+        <div class="modal-box" style="border-color: #4cd964;">
+            <div style="font-size: 32px;">💤</div>
+            <div style="font-size: 16px; font-weight: 900; color: #4cd964; letter-spacing: 1px;">С ВОЗВРАЩЕНИЕМ!</div>
+            <div style="font-size: 12px; color: #aaa;" id="offlineTimeText">Тебя не было: 0 мин</div>
+            <div style="font-size: 24px; font-weight: 900; color: #ff9500; margin: 4px 0;" id="offlineRewardText">+0 💰</div>
+            <div style="font-size: 11px; color: #888;">Твои шкафы и фонарики работали пока тебя не было!</div>
+            <button class="modal-submit" style="background: linear-gradient(135deg, #4cd964, #28a745); color: #fff;" onclick="claimOfflineReward()">ЗАБРАТЬ ДОХОД 🚀</button>
+        </div>
+    </div>
+
     <!-- 🎁 ОКНО ПРОМОКОДОВ -->
     <div class="modal-overlay" id="codeModal">
         <div class="modal-box">
@@ -667,11 +679,10 @@
 
     <div class="top-bar">
         <div class="top-left-status">
-            <div class="rebirth-badge" id="rebirthBadge">🌀 ПЕРЕРОЖДЕНИЯ: 0 (+0%)</div>
+            <div class="rebirth-badge" id="rebirthBadge">🌀 Перерождений: 0 (+0%)</div>
             <div class="cloud-indicator" id="cloudStatus">☁️</div>
         </div>
         <div class="top-actions">
-            <!-- 🎁 КНОПКА КОДОВ СБОКУ -->
             <button class="icon-btn" id="codeBtn" onclick="openCodeModal()" title="Промокоды">🎁</button>
             <button class="icon-btn" id="soundBtn" onclick="toggleSound()">🔊</button>
         </div>
@@ -806,25 +817,12 @@
             : `Беглец #${currentUserId.slice(-4)}`;
 
         // ==========================================
-        // 🎁 СИСТЕМА ПРОМОКОДОВ (РЕДАКТИРУЙ ЗДЕСЬ)
+        // 🎁 СИСТЕМА ПРОМОКОДОВ
         // ==========================================
         const PROMO_CODES = {
-            "A200": {
-                rewardScore: 100000,
-                rewardRebirths: 0,
-                desc: "+100 000 💰"
-            },
-            "RELEASE": {
-                rewardScore: 50000,
-                rewardRebirths: 0,
-                desc: "+50 000 💰"
-            },
-            "ALEXEY166": {
-                rewardScore: 166666,
-                rewardRebirths: 0,
-                desc: "+166 666 💰"
-            },
-            // Сюда можно дописывать любые свои коды по образцу выше!
+            "A200": { rewardScore: 100000, rewardRebirths: 0, desc: "+100 000 💰" },
+            "RELEASE": { rewardScore: 50000, rewardRebirths: 0, desc: "+50 000 💰" },
+            "ALEXEY166": { rewardScore: 166666, rewardRebirths: 0, desc: "+166 666 💰" }
         };
 
         function openCodeModal() {
@@ -1029,6 +1027,9 @@
             { id: 'a1000', title: 'А1000', desc: 'Как долго это заняло..?', roomReq: 1000, img: 'a1000.png' }
         ];
 
+        // ==========================================
+        // 🌐 100% СЕРВЕРНАЯ СИСТЕМА
+        // ==========================================
         function getDefaultState() {
             return {
                 score: 0,
@@ -1041,12 +1042,14 @@
                 perks: {},
                 enabledPerks: {},
                 trophies: {},
-                usedCodes: {}
+                usedCodes: {},
+                lastOnline: Date.now()
             };
         }
 
         let state = getDefaultState();
         let isCloudLoaded = false;
+        let pendingOfflineReward = 0;
 
         function isPerkActive(id) {
             if (!state.perks || !state.perks[id]) return false;
@@ -1269,7 +1272,7 @@
             const cost = getRebirthCost(state.rebirths);
             const boostPercent = state.rebirths * 25;
 
-            rebirthBadgeEl.innerText = `🌀 ПЕРЕРОЖДЕНИЯ: ${state.rebirths} (+${boostPercent}%)`;
+            rebirthBadgeEl.innerText = `🌀 Перерождений: ${state.rebirths} (+${boostPercent}%)`;
             document.getElementById('rebirthLvlText').innerText = state.rebirths;
             document.getElementById('rebirthBoostText').innerText = `+${boostPercent}%`;
 
@@ -1476,6 +1479,57 @@
         }, 1000);
 
         // ==========================================
+        // 💤 СИСТЕМА ОФФЛАЙН-ДОХОДА
+        // ==========================================
+        function checkOfflineIncome() {
+            const now = Date.now();
+            const lastTime = state.lastOnline || now;
+            const diffSeconds = Math.floor((now - lastTime) / 1000);
+
+            // Лимит накопления: максимум 8 часов (28800 сек)
+            const cappedSeconds = Math.min(diffSeconds, 28800);
+
+            const multiplier = isPerkActive('energy') ? 1.25 : 1.0;
+            const effectiveCps = Math.floor(state.cps * multiplier);
+
+            // Если прошло больше 30 секунд и есть доход
+            if (cappedSeconds >= 30 && effectiveCps > 0) {
+                pendingOfflineReward = Math.floor(cappedSeconds * effectiveCps);
+
+                if (pendingOfflineReward > 0) {
+                    const timeString = formatOfflineTime(cappedSeconds);
+                    document.getElementById('offlineTimeText').innerText = `Тебя не было: ${timeString}`;
+                    document.getElementById('offlineRewardText').innerText = `+${pendingOfflineReward.toLocaleString()} 💰`;
+                    document.getElementById('offlineModal').style.display = 'flex';
+                }
+            }
+            state.lastOnline = now;
+        }
+
+        function formatOfflineTime(seconds) {
+            const hours = Math.floor(seconds / 3600);
+            const minutes = Math.floor((seconds % 3600) / 60);
+            if (hours > 0) return `${hours} ч ${minutes} мин`;
+            return `${minutes} мин`;
+        }
+
+        function claimOfflineReward() {
+            if (pendingOfflineReward > 0) {
+                state.score += pendingOfflineReward;
+                state.totalEarned += pendingOfflineReward;
+                state.lastOnline = Date.now();
+                pendingOfflineReward = 0;
+
+                playSound('win');
+                if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+
+                document.getElementById('offlineModal').style.display = 'none';
+                updateUI();
+                saveGame();
+            }
+        }
+
+        // ==========================================
         // 🌐 ЗАГРУЗКА И СОХРАНЕНИЕ В SUPABASE
         // ==========================================
         async function loadCloudSave() {
@@ -1535,11 +1589,13 @@
             }
             applyPerksVisuals();
             updateUI();
+            checkOfflineIncome(); // 👈 Проверка оффлайн-дохода при старте
         }
 
         async function saveGame() {
             if (!isCloudLoaded) return;
 
+            state.lastOnline = Date.now(); // Обновляем время онлайна
             localStorage.setItem('a200_chaos_v5', JSON.stringify(state));
 
             if (!db) return;
