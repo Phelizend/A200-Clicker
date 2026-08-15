@@ -43,6 +43,19 @@
             text-align: center;
         }
 
+        /* 🔄 Экран серверной синхронизации */
+        #cloudLoadingScreen {
+            position: fixed;
+            inset: 0;
+            background: #08080a;
+            z-index: 99998;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.3s;
+        }
+
         body.disco-mode { animation: discoBg 6s linear infinite alternate; }
         @keyframes discoBg {
             0% { background: radial-gradient(circle, #2b003b 0%, #080014 100%); }
@@ -364,7 +377,7 @@
         .card-btn:not(:disabled):active { transform: scale(0.97); }
         .card-btn:disabled { opacity: 0.35; filter: grayscale(0.8); cursor: not-allowed; }
 
-        /* ✨ Стили тумблеров приколов */
+        /* ✨ Тумблеры приколов */
         .card-btn.perk-on {
             border-color: #4cd964;
             background: rgba(76, 217, 100, 0.12);
@@ -383,7 +396,7 @@
         .badge-on { font-size: 12px; font-weight: 900; color: #4cd964; }
         .badge-off { font-size: 12px; font-weight: 900; color: #ff3344; }
 
-        /* 🥇🥈🥉 СТИЛИ ЛИДЕРБОРДА ТОП-3 */
+        /* 🥇🥈🥉 ЛИДЕРБОРД */
         .leaderboard-box {
             background: rgba(26, 26, 30, 0.9);
             border: 1px solid rgba(255, 215, 0, 0.3);
@@ -411,7 +424,7 @@
         .leader-stats { font-size: 10px; color: #8e8e93; }
         .leader-score { font-size: 13px; font-weight: 900; color: #ff9500; text-align: right; }
 
-        /* 🏆 КАРТОЧКИ ТРОФЕЕВ */
+        /* 🏆 ТРОФЕИ */
         .trophy-card {
             background: rgba(26, 26, 30, 0.85);
             border: 1px solid rgba(255, 255, 255, 0.08);
@@ -484,7 +497,7 @@
         }
         .spin-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 
-        /* 🌀 Стили Перерождения */
+        /* 🌀 Перерождение */
         .rebirth-box {
             background: radial-gradient(circle at 50% 50%, rgba(0, 229, 255, 0.15) 0%, rgba(10, 10, 15, 0.9) 100%);
             border: 1px solid rgba(0, 229, 255, 0.4);
@@ -530,12 +543,6 @@
     </style>
 </head>
 <body>
-    <!-- 🔄 ЭКРАН СИНХРОНИЗАЦИИ ОБЛАКА -->
-    <div id="cloudLoadingScreen" style="position: fixed; inset: 0; background: #08080a; z-index: 99998; display: flex; flex-direction: column; align-items: center; justify-content: center; transition: opacity 0.3s;">
-        <div style="font-size: 40px; margin-bottom: 12px; animation: pulseHalo 1.5s infinite alternate;">☁️</div>
-        <div style="color: #00e5ff; font-weight: 800; font-size: 14px; letter-spacing: 1px;">СИНХРОНИЗАЦИЯ С ОБЛАКОМ...</div>
-        <div style="color: #888; font-size: 11px; margin-top: 6px;">Загружаем данные твоего аккаунта</div>
-    </div>
 
     <!-- 🚫 ЭКРАН ЗАЩИТЫ ОТ БРАУЗЕРА -->
     <div id="blockScreen">
@@ -544,6 +551,13 @@
         <p style="color: #888; font-size: 12px; max-width: 280px; line-height: 1.5; margin-bottom: 20px;">
             Игра A200 доступна только внутри официального Telegram MiniApp.
         </p>
+    </div>
+
+    <!-- 🔄 ЭКРАН СИНХРОНИЗАЦИИ ОБЛАКА -->
+    <div id="cloudLoadingScreen">
+        <div style="font-size: 40px; margin-bottom: 12px; animation: pulseHalo 1.5s infinite alternate;">☁️</div>
+        <div style="color: #00e5ff; font-weight: 800; font-size: 14px; letter-spacing: 1px;">СИНХРОНИЗАЦИЯ С ОБЛАКОМ...</div>
+        <div style="color: #888; font-size: 11px; margin-top: 6px;">Загружаем данные аккаунта</div>
     </div>
 
     <!-- 🏆 ВСПЛЫВАЮЩИЙ ПОПАП -->
@@ -796,12 +810,10 @@
         // 🎮 ИГРОВОЙ ДВИЖОК
         // ==========================================
         function getRankThreshold(rankIndex) {
-           if (rankIndex <= 0) return 0;
+            if (rankIndex <= 0) return 0;
             if (rankIndex <= 15) {
-                // Плавная арифметика до Комнаты 150
                 return Math.floor(80 * (rankIndex * (rankIndex + 1)) / 2);
             } else {
-                // Мягкий рост (1.13 вместо 1.38)
                 const baseAt15 = Math.floor(80 * (15 * 16) / 2); // 9600
                 const extra = rankIndex - 15;
                 return Math.floor(baseAt15 * Math.pow(1.13, extra));
@@ -842,33 +854,30 @@
             { id: 'a1000', title: 'А1000', desc: 'Как долго это заняло..?', roomReq: 1000, img: 'a1000.png' }
         ];
 
-        let state = {
-            score: 0,
-            totalEarned: 0,
-            tapPower: 1,
-            critChance: 5,
-            cps: 0,
-            rebirths: 0,
-            levels: { tapPower: 0, critChance: 0, radio: 0, flashlight: 0, door: 0, overload: 0 },
-            perks: {},
-            enabledPerks: {}, // Хранит состояние ВКЛ / ВЫКЛ купленных приколов
-            trophies: {}
-        };
-
-        const saveKeys = ['a200_chaos_v5', 'a200_chaos_v4', 'a200_chaos_v3'];
-        for (const key of saveKeys) {
-            const saved = localStorage.getItem(key);
-            if (saved) {
-                try { state = Object.assign(state, JSON.parse(saved)); break; } catch(e){}
-            }
+        // ==========================================
+        // 🌐 100% СЕРВЕРНАЯ СИСТЕМА СОХРАНЕНИЯ
+        // ==========================================
+        function getDefaultState() {
+            return {
+                score: 0,
+                totalEarned: 0,
+                tapPower: 1,
+                critChance: 5,
+                cps: 0,
+                rebirths: 0,
+                levels: { tapPower: 0, critChance: 0, radio: 0, flashlight: 0, door: 0, overload: 0 },
+                perks: {},
+                enabledPerks: {},
+                trophies: {}
+            };
         }
-        if (!state.trophies) state.trophies = {};
-        if (!state.enabledPerks) state.enabledPerks = {};
 
-        // Проверка: активен ли прикол прямо сейчас
+        let state = getDefaultState();
+        let isCloudLoaded = false;
+
         function isPerkActive(id) {
             if (!state.perks || !state.perks[id]) return false;
-            return state.enabledPerks[id] !== false; // По умолчанию включен, если куплен
+            return state.enabledPerks[id] !== false;
         }
 
         let selectedBet = 0;
@@ -929,7 +938,6 @@
             });
         }
 
-        // ✨ Рендер магазина приколов с тумблерами ВКЛ / ВЫКЛ
         function renderPerks() {
             tabPerksEl.innerHTML = '';
             PERKS_CONFIG.forEach(cfg => {
@@ -937,7 +945,6 @@
                 const active = isPerkActive(cfg.id);
 
                 const btn = document.createElement('button');
-                
                 if (!isBought) {
                     btn.className = 'card-btn';
                     btn.disabled = state.score < cfg.cost;
@@ -960,12 +967,10 @@
                         <div class="${active ? 'badge-on' : 'badge-off'}">${active ? 'ВКЛ 🟢' : 'ВЫКЛ 🔴'}</div>
                     `;
                 }
-
                 tabPerksEl.appendChild(btn);
             });
         }
 
-        // Переключение купленного прикола
         function togglePerk(id) {
             if (!state.perks || !state.perks[id]) return;
             if (!state.enabledPerks) state.enabledPerks = {};
@@ -1298,69 +1303,68 @@
         }, 1000);
 
         // ==========================================
-        // 🌐 БРОНЕБОЙНОЕ ОБЛАЧНОЕ СОХРАНЕНИЕ
+        // 🌐 ЗАГРУЗКА И СОХРАНЕНИЕ В SUPABASE
         // ==========================================
-        let isCloudLoaded = false; // Блокиратор перезаписи
-
         async function loadCloudSave() {
             const loadingScreen = document.getElementById('cloudLoadingScreen');
 
-            // Тайм-аут на случай медленного интернета (максимум 2.5 сек)
-            const fallbackTimer = setTimeout(() => {
-                if (!isCloudLoaded) {
-                    isCloudLoaded = true;
-                    if (loadingScreen) loadingScreen.style.display = 'none';
-                    updateUI();
-                }
-            }, 2500);
-
             if (!db) {
-                isCloudLoaded = true;
-                if (loadingScreen) loadingScreen.style.display = 'none';
+                loadLocalFallback();
+                finishLoading();
                 return;
             }
 
             try {
                 const { data, error } = await db
                     .from('players')
-                    .select('save_data, total_earned, rebirths')
+                    .select('*')
                     .eq('user_id', String(currentUserId))
-                    .single();
+                    .maybeSingle();
 
-                if (data && data.save_data) {
-                    const cloudSave = data.save_data;
-                    
-                    // Умное сравнение: берем то, где прогресс дальше
-                    const cloudEarned = Number(data.total_earned || cloudSave.totalEarned || 0);
-                    const localEarned = Number(state.totalEarned || 0);
+                if (data) {
+                    let cloudData = data.save_data || {};
 
-                    if (cloudEarned >= localEarned || Number(data.rebirths || 0) >= Number(state.rebirths || 0)) {
-                        state = Object.assign(state, cloudSave);
-                    }
+                    // 👑 ПРИМЕНЯЕМ РУЧНЫЕ ПРАВКИ ИЗ ТАБЛИЦЫ SUPABASE НАПРЯМУЮ:
+                    if (data.score !== null && data.score !== undefined) cloudData.score = Number(data.score);
+                    if (data.total_earned !== null && data.total_earned !== undefined) cloudData.totalEarned = Number(data.total_earned);
+                    if (data.rebirths !== null && data.rebirths !== undefined) cloudData.rebirths = Number(data.rebirths);
 
+                    state = Object.assign(getDefaultState(), cloudData);
                     if (!state.enabledPerks) state.enabledPerks = {};
                     if (!state.trophies) state.trophies = {};
 
-                    // Обновляем локальное хранилище актуальными данными из облака
                     localStorage.setItem('a200_chaos_v5', JSON.stringify(state));
                     document.getElementById('cloudStatus').innerText = '☁️ В сети';
+                } else {
+                    await saveGame();
                 }
             } catch(e) {
-                console.warn("Ошибка загрузки облака:", e);
+                console.warn("Ошибка связи с сервером:", e);
+                loadLocalFallback();
             } finally {
-                clearTimeout(fallbackTimer);
-                isCloudLoaded = true;
-                if (loadingScreen) {
-                    loadingScreen.style.opacity = '0';
-                    setTimeout(() => loadingScreen.style.display = 'none', 300);
-                }
-                applyPerksVisuals();
-                updateUI();
+                finishLoading();
             }
         }
 
+        function loadLocalFallback() {
+            const saved = localStorage.getItem('a200_chaos_v5');
+            if (saved) {
+                try { state = Object.assign(getDefaultState(), JSON.parse(saved)); } catch(e){}
+            }
+        }
+
+        function finishLoading() {
+            isCloudLoaded = true;
+            const loadingScreen = document.getElementById('cloudLoadingScreen');
+            if (loadingScreen) {
+                loadingScreen.style.opacity = '0';
+                setTimeout(() => loadingScreen.style.display = 'none', 300);
+            }
+            applyPerksVisuals();
+            updateUI();
+        }
+
         async function saveGame() {
-            // 🛑 НЕ сохраняем локальные нули в базу, пока облако не загрузилось!
             if (!isCloudLoaded) return;
 
             localStorage.setItem('a200_chaos_v5', JSON.stringify(state));
@@ -1380,7 +1384,6 @@
                 }, { onConflict: 'user_id' });
 
                 if (error) {
-                    console.error("Save error:", error);
                     document.getElementById('cloudStatus').innerText = '⚠️ Ошибка';
                 } else {
                     document.getElementById('cloudStatus').innerText = '☁️ Сохранено';
@@ -1443,8 +1446,6 @@
             }
         }
 
-        applyPerksVisuals();
-        updateUI();
         loadCloudSave();
     </script>
 </body>
