@@ -718,7 +718,7 @@
         <button class="tab-btn" onclick="switchTab('casino', this)">🎰 Рулетка</button>
         <button class="tab-btn" onclick="switchTab('perks', this)">✨ Приколы</button>
         <button class="tab-btn" onclick="switchTab('trophies', this)">🏆 Трофеи</button>
-        <button class="tab-btn" onclick="switchTab('leaderboard', this)">👑 ТОП-3</button>
+        <button class="tab-btn" onclick="switchTab('leaderboard', this)">👑 ТОП-5</button>
         <button class="tab-btn" onclick="switchTab('rebirth', this)">🌀 Ребитх</button>
     </div>
 
@@ -763,7 +763,7 @@
             <div class="rebirth-stats">
                 Текущий уровень: <b id="rebirthLvlText">0</b><br>
                 Постоянный бонус клика: <b id="rebirthBoostText" style="color:#00e5ff;">+0%</b><br>
-                Каждое перерождение даёт: <b style="color:#4cd964;">+25% силы клика</b><br>
+                Каждое перерождение даёт: <b style="color:#4cd964;">+25% к кликам</b><br>
                 <small style="color:#888;">(Очки и апгрейды сбросятся, но приколюхи и буст останутся)</small>
             </div>
             <button class="rebirth-btn" id="rebirthActionBtn" onclick="doRebirth()">
@@ -1289,10 +1289,16 @@
             return rank * 10;
         }
 
+        function getEffectiveCps() {
+            if (state.cps <= 0) return 0;
+            const energyMult = isPerkActive('energy') ? 1.25 : 1.0;
+            const rebirthMult = 1 + (state.rebirths * 0.25);
+            return Math.floor(state.cps * energyMult * rebirthMult);
+        }
+        
         function updateUI() {
             scoreEl.innerText = Math.floor(state.score).toLocaleString();
-            const multiplier = isPerkActive('energy') ? 1.25 : 1.0;
-            const effectiveCps = Math.floor(state.cps * multiplier);
+            const effectiveCps = getEffectiveCps();
             cpsEl.innerText = `В секунду: +${effectiveCps.toLocaleString()}`;
 
             updateInfiniteRank();
@@ -1471,9 +1477,8 @@
         }
 
         setInterval(() => {
-            if (state.cps > 0) {
-                const multiplier = isPerkActive('energy') ? 1.25 : 1.0;
-                const earned = Math.floor(state.cps * multiplier);
+            const earned = getEffectiveCps();
+            if (earned > 0) {
                 state.score += earned;
                 state.totalEarned += earned;
                 updateUI();
@@ -1491,8 +1496,7 @@
             // Лимит накопления: максимум 8 часов (28800 сек)
             const cappedSeconds = Math.min(diffSeconds, 28800);
 
-            const multiplier = isPerkActive('energy') ? 1.25 : 1.0;
-            const effectiveCps = Math.floor(state.cps * multiplier);
+            const effectiveCps = getEffectiveCps();
 
             // Срабатывает от 5 секунд отсутствия
             if (cappedSeconds >= 5 && effectiveCps > 0) {
