@@ -744,11 +744,11 @@
 
     <div class="content-panel" id="tabTrophies"></div>
 
-    <!-- 👑 Панель ТОП-3 ЛИДЕРБОРДА -->
+    <!-- 👑 Панель ТОП-5 ЛИДЕРБОРДА -->
     <div class="content-panel" id="tabLeaderboard">
         <div class="leaderboard-box">
             <div style="font-size: 12px; font-weight: 800; color: #ffd700; text-align: center; margin-bottom: 4px;">
-                👑 ТОП-3 ИГРОКОВ КЛИКЕРА
+                👑 ТОП-5 ИГРОКОВ КЛИКЕРА
             </div>
             <div id="leaderboardList" style="display: flex; flex-direction: column; gap: 6px;">
                 <div style="color: #888; font-size: 12px; text-align: center; padding: 15px;">Загрузка топа...</div>
@@ -1641,12 +1641,14 @@
             }
 
             try {
+                // 🚪 Сортировка: сначала по КОМНАТАМ, затем по перерождениям и очкам
                 const { data, error } = await db
                     .from('players')
                     .select('username, rebirths, room, score')
-                    .order('rebirths', { ascending: false })
-                    .order('score', { ascending: false })
-                    .limit(3);
+                    .order('room', { ascending: false })      // 👈 1-й приоритет: Комнаты
+                    .order('rebirths', { ascending: false })  // 👈 2-й приоритет: Перерождения
+                    .order('score', { ascending: false })     // 👈 3-й приоритет: Очки
+                    .limit(5);                                // 👈 Берем ТОП-5 вместо 3
 
                 if (error) {
                     listEl.innerHTML = `<div style="color:#ff3344; font-size:11px; text-align:center; padding:10px;">Ошибка БД: ${error.message}</div>`;
@@ -1658,7 +1660,8 @@
                     return;
                 }
 
-                const medals = ['🥇', '🥈', '🥉'];
+                // 🥇🥈🥉 Медали и номера для 5 мест
+                const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
                 listEl.innerHTML = '';
 
                 data.forEach((p, idx) => {
@@ -1669,7 +1672,7 @@
                             <div class="leader-medal">${medals[idx] || '🎖️'}</div>
                             <div>
                                 <div class="leader-name">${p.username || 'Аноним'}</div>
-                                <div class="leader-stats">🌀 Перерождений: ${p.rebirths} | 🚪Комната ${p.room}</div>
+                                <div class="leader-stats">🚪 Комната ${p.room} | 🌀 Перерождений: ${p.rebirths}</div>
                             </div>
                         </div>
                         <div class="leader-score">${Math.floor(p.score).toLocaleString()} 💰</div>
