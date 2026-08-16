@@ -357,7 +357,22 @@
             filter: drop-shadow(0 0 10px #ffd700);
         }
 
-        /* 🌧️ Падающие мини-лица */
+        /* 🐔 Шапка курицы */
+        .chicken-hat {
+            top: -38px;
+            left: 0;
+            width: 100%;
+            font-size: 46px;
+            text-align: center;
+            filter: drop-shadow(0 0 10px rgba(255, 200, 0, 0.6));
+            animation: chickenWobble 1.8s ease-in-out infinite alternate;
+        }
+        @keyframes chickenWobble {
+            0% { transform: rotate(-6deg) translateY(0); }
+            100% { transform: rotate(6deg) translateY(-4px); }
+        }
+
+        /* 🌧️ Падающие мини-лица и яйца */
         .falling-face {
             position: absolute;
             width: 32px;
@@ -648,7 +663,7 @@
         <div class="modal-box" style="border-color: #4cd964;">
             <div style="font-size: 32px;">💤</div>
             <div style="font-size: 16px; font-weight: 900; color: #4cd964; letter-spacing: 1px;">С ВОЗВРАЩЕНИЕМ!</div>
-            <div style="font-size: 12px; color: #aaa;" id="offlineTimeText">Тебя не было: 0 мин</div>
+            <div style="font-size: 12px; color: #aaa;" id="offlineTimeText">Тебя не было: 0 сек</div>
             <div style="font-size: 24px; font-weight: 900; color: #ff9500; margin: 4px 0;" id="offlineRewardText">+0 💰</div>
             <div style="font-size: 11px; color: #888;">Твои шкафы и фонарики работали пока тебя не было!</div>
             <button class="modal-submit" style="background: linear-gradient(135deg, #4cd964, #28a745); color: #fff;" onclick="claimOfflineReward()">ЗАБРАТЬ ДОХОД 🚀</button>
@@ -708,6 +723,8 @@
         <div class="target-container" id="clickTargetContainer">
             <div class="accessory crown" id="accCrown">👑</div>
             <div class="accessory glasses" id="accGlasses">🕶️</div>
+            <!-- 🐔 Шапка курицы -->
+            <div class="accessory chicken-hat" id="accChicken">🐔</div>
             <img src="face.png" alt="A200" class="target-img" id="clickTarget">
         </div>
     </div>
@@ -763,7 +780,7 @@
             <div class="rebirth-stats">
                 Текущий уровень: <b id="rebirthLvlText">0</b><br>
                 Постоянный бонус клика: <b id="rebirthBoostText" style="color:#00e5ff;">+0%</b><br>
-                Каждое перерождение даёт: <b style="color:#4cd964;">+25% к кликам</b><br>
+                Каждое перерождение даёт: <b style="color:#4cd964;">+25% к кликам и автокликеру</b><br>
                 <small style="color:#888;">(Очки и апгрейды сбросятся, но приколюхи и буст останутся)</small>
             </div>
             <button class="rebirth-btn" id="rebirthActionBtn" onclick="doRebirth()">
@@ -824,7 +841,8 @@
             "RELEASE": { rewardScore: 50000, rewardRebirths: 0, desc: "+50 000 💰" },
             "ALEXEY166": { rewardScore: 166666, rewardRebirths: 0, desc: "+166 666 💰" },
             "NOGOOD": { rewardScore: 150000, rewardRebirths: 1, desc: "+150 000 💰, +1 Перерождение 🌀" },
-            "STATISTICSNSTUFFSOON": { rewardScore: 200826, rewardRebirths: 0, desc: "+200 826 💰" }
+            "STATISTICSNSTUFFSOON": { rewardScore: 200826, rewardRebirths: 0, desc: "+200 826 💰" },
+            "1KURBET": { rewardScore: 100000, rewardRebirths: 0, desc: "+100 000 💰 (🐔Коллаборация)" }
         };
 
         function openCodeModal() {
@@ -989,7 +1007,7 @@
             if (rankIndex <= 15) {
                 return Math.floor(80 * (rankIndex * (rankIndex + 1)) / 2);
             } else {
-                const baseAt15 = Math.floor(80 * (15 * 16) / 2);
+                const baseAt15 = Math.floor(80 * (15 * 16) / 2); // 9600
                 const extra = rankIndex - 15;
                 return Math.floor(baseAt15 * Math.pow(1.13, extra));
             }
@@ -1010,6 +1028,7 @@
 
         const PERKS_CONFIG = [
             { id: 'glasses', title: '🕶️ Очки Thug Life', desc: 'Стильные очки на A200', cost: 15000 },
+            { id: 'chicken', title: '🐔 Шапка Курицы', desc: 'Коллаборация! Надевает курочку и спавнит яйца 🥚 (Промокод 1KURBET)', cost: 50000 },
             { id: 'bassboost', title: '🔊 Басс-буст', desc: 'Тяжелый басовый клик', cost: 40000 },
             { id: 'disco', title: '🪩 Дискотека A200', desc: 'Переливающийся неоновый фон', cost: 120000 },
             { id: 'blood', title: '🩸 Кровавый Режим', desc: 'Зловещая багровая комната', cost: 350000 },
@@ -1056,6 +1075,14 @@
         function isPerkActive(id) {
             if (!state.perks || !state.perks[id]) return false;
             return state.enabledPerks[id] !== false;
+        }
+
+        // ⚡ Расчет дохода с учетом перерождений и энергетика
+        function getEffectiveCps() {
+            if (state.cps <= 0) return 0;
+            const energyMult = isPerkActive('energy') ? 1.25 : 1.0;
+            const rebirthMult = 1 + (state.rebirths * 0.25);
+            return Math.floor(state.cps * energyMult * rebirthMult);
         }
 
         let selectedBet = 0;
@@ -1215,6 +1242,8 @@
         function applyPerksVisuals() {
             document.getElementById('accGlasses').style.display = isPerkActive('glasses') ? 'block' : 'none';
             document.getElementById('accCrown').style.display = isPerkActive('crown') ? 'block' : 'none';
+            document.getElementById('accChicken').style.display = isPerkActive('chicken') ? 'block' : 'none';
+            
             clickTarget.classList.toggle('gold-face', isPerkActive('goldFace'));
             document.body.classList.toggle('disco-mode', isPerkActive('disco'));
             document.body.classList.toggle('blood-mode', isPerkActive('blood'));
@@ -1289,13 +1318,6 @@
             return rank * 10;
         }
 
-        function getEffectiveCps() {
-            if (state.cps <= 0) return 0;
-            const energyMult = isPerkActive('energy') ? 1.25 : 1.0;
-            const rebirthMult = 1 + (state.rebirths * 0.25);
-            return Math.floor(state.cps * energyMult * rebirthMult);
-        }
-        
         function updateUI() {
             scoreEl.innerText = Math.floor(state.score).toLocaleString();
             const effectiveCps = getEffectiveCps();
@@ -1438,11 +1460,25 @@
 
         function spawnFallingFaces(startX, startY, count) {
             for (let i = 0; i < Math.min(count, 20); i++) {
-                const face = document.createElement('img');
-                face.src = 'face.png';
-                face.className = 'falling-face' + (isPerkActive('goldFace') ? ' gold-face' : '');
-                face.style.left = `${startX - 15}px`;
-                face.style.top = `${startY - 15}px`;
+                let el;
+                
+                // 🥚 Если надета шапка курицы — часть частиц превращается в яйца и цыплят!
+                if (isPerkActive('chicken') && Math.random() < 0.45) {
+                    el = document.createElement('div');
+                    el.innerText = Math.random() > 0.5 ? '🥚' : '🐣';
+                    el.style.fontSize = '24px';
+                    el.style.display = 'flex';
+                    el.style.alignItems = 'center';
+                    el.style.justifyContent = 'center';
+                } else {
+                    el = document.createElement('img');
+                    el.src = 'face.png';
+                    if (isPerkActive('goldFace')) el.className = 'gold-face';
+                }
+
+                el.className += ' falling-face';
+                el.style.left = `${startX - 15}px`;
+                el.style.top = `${startY - 15}px`;
 
                 const popX = (Math.random() - 0.5) * 160;
                 const popY = - (30 + Math.random() * 70);
@@ -1453,16 +1489,16 @@
                 const endRot = midRot + (Math.random() - 0.5) * 360;
                 const duration = 0.7 + Math.random() * 0.4;
 
-                face.style.setProperty('--pop-x', `${popX}px`);
-                face.style.setProperty('--pop-y', `${popY}px`);
-                face.style.setProperty('--end-x', `${endX}px`);
-                face.style.setProperty('--end-y', `${endY}px`);
-                face.style.setProperty('--mid-rot', `${midRot}deg`);
-                face.style.setProperty('--end-rot', `${endRot}deg`);
-                face.style.setProperty('--duration', `${duration}s`);
+                el.style.setProperty('--pop-x', `${popX}px`);
+                el.style.setProperty('--pop-y', `${popY}px`);
+                el.style.setProperty('--end-x', `${endX}px`);
+                el.style.setProperty('--end-y', `${endY}px`);
+                el.style.setProperty('--mid-rot', `${midRot}deg`);
+                el.style.setProperty('--end-rot', `${endRot}deg`);
+                el.style.setProperty('--duration', `${duration}s`);
 
-                document.body.appendChild(face);
-                setTimeout(() => face.remove(), duration * 1000);
+                document.body.appendChild(el);
+                setTimeout(() => el.remove(), duration * 1000);
             }
         }
 
@@ -1486,21 +1522,19 @@
         }, 1000);
 
         // ==========================================
-        // 💤 СИСТЕМА ОФФЛАЙН-ДОХОДА (С СЕКУНДАМИ)
+        // 💤 СИСТЕМА ОФФЛАЙН-ДОХОДА
         // ==========================================
         function checkOfflineIncome() {
             const now = Date.now();
             const lastTime = state.lastOnline || now;
             const diffSeconds = Math.floor((now - lastTime) / 1000);
 
-            // Лимит накопления: максимум 8 часов (28800 сек)
             const cappedSeconds = Math.min(diffSeconds, 28800);
-
             const effectiveCps = getEffectiveCps();
 
             // Срабатывает от 5 секунд отсутствия
             if (cappedSeconds >= 5 && effectiveCps > 0) {
-                // 🤫 Тихий нерф оффлайн-дохода в 5 раз:
+                // 🤫 Сбалансированный оффлайн-доход
                 pendingOfflineReward = Math.floor((cappedSeconds * effectiveCps) / 5);
 
                 if (pendingOfflineReward > 0) {
@@ -1513,7 +1547,6 @@
             state.lastOnline = now;
         }
 
-        // Красивый формат времени: секунды, минуты и часы
         function formatOfflineTime(seconds) {
             const hours = Math.floor(seconds / 3600);
             const minutes = Math.floor((seconds % 3600) / 60);
@@ -1521,8 +1554,9 @@
 
             if (hours > 0) return `${hours} ч ${minutes} мин`;
             if (minutes > 0) return `${minutes} мин ${secs} сек`;
-            return `${secs} сек`; // Если меньше минуты — пишет секунды (например: "24 сек")
+            return `${secs} сек`;
         }
+
         function claimOfflineReward() {
             if (pendingOfflineReward > 0) {
                 state.score += pendingOfflineReward;
@@ -1599,13 +1633,13 @@
             }
             applyPerksVisuals();
             updateUI();
-            checkOfflineIncome(); // 👈 Проверка оффлайн-дохода при старте
+            checkOfflineIncome();
         }
 
         async function saveGame() {
             if (!isCloudLoaded) return;
 
-            state.lastOnline = Date.now(); // Обновляем время онлайна
+            state.lastOnline = Date.now();
             localStorage.setItem('a200_chaos_v5', JSON.stringify(state));
 
             if (!db) return;
@@ -1649,10 +1683,10 @@
                 const { data, error } = await db
                     .from('players')
                     .select('username, rebirths, room, score')
-                    .order('room', { ascending: false })      // 👈 1-й приоритет: Комнаты
-                    .order('rebirths', { ascending: false })  // 👈 2-й приоритет: Перерождения
-                    .order('score', { ascending: false })     // 👈 3-й приоритет: Очки
-                    .limit(5);                                // 👈 Берем ТОП-5 вместо 3
+                    .order('room', { ascending: false })
+                    .order('rebirths', { ascending: false })
+                    .order('score', { ascending: false })
+                    .limit(5);
 
                 if (error) {
                     listEl.innerHTML = `<div style="color:#ff3344; font-size:11px; text-align:center; padding:10px;">Ошибка БД: ${error.message}</div>`;
@@ -1664,7 +1698,6 @@
                     return;
                 }
 
-                // 🥇🥈🥉 Медали и номера для 5 мест
                 const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
                 listEl.innerHTML = '';
 
