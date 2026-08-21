@@ -357,7 +357,6 @@
             filter: drop-shadow(0 0 10px #ffd700);
         }
 
-        /* 🐔 Шапка курицы */
         .chicken-hat {
             top: -38px;
             left: 0;
@@ -790,622 +789,609 @@
     </div>
 
     <script>
-        // ==========================================
-        // 🔒 ПРОВЕРКА TELEGRAM
-        // ==========================================
-        const tg = window.Telegram?.WebApp;
-        const isInsideTelegram = Boolean(tg && tg.initData && tg.initData.length > 0);
+        // 🔒 ИЗОЛИРОВАННАЯ КАПСУЛА АНТИЧИТА (Переменные скрыты от консоли браузера)
+        (function() {
+            const tg = window.Telegram?.WebApp;
+            const isInsideTelegram = Boolean(tg && tg.initData && tg.initData.length > 0);
 
-        if (!isInsideTelegram) {
-            document.getElementById('blockScreen').style.display = 'flex';
-            throw new Error("Direct browser access blocked");
-        }
-
-        tg.ready();
-        tg.expand();
-
-        document.addEventListener('contextmenu', e => e.preventDefault());
-        document.addEventListener('keydown', e => {
-            if (e.keyCode === 123 || (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74))) {
-                e.preventDefault();
-            }
-        });
-
-        // ==========================================
-        // 🔑 SUPABASE НАСТРОЙКИ
-        // ==========================================
-        const SUPABASE_URL = "https://dyvotapsgnpltbieoxzb.supabase.co"; 
-        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR5dm90YXBzZ25wbHRiaWVveHpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3MTMyMDUsImV4cCI6MjEwMjI4OTIwNX0.Ig6eXMTfM9MTmGHh1fD6Ys7vwXHKMBH3qFY0jZfhI6Q";
-
-        let db = null;
-        try {
-            if (SUPABASE_URL.includes("http") && !SUPABASE_URL.includes("ВАШ_ПРОЕКТ")) {
-                const parsedUrl = new URL(SUPABASE_URL.trim());
-                db = window.supabase.createClient(parsedUrl.origin, SUPABASE_KEY.trim());
-            }
-        } catch(e) { console.error("Supabase init error", e); }
-
-        const userTelegram = tg?.initDataUnsafe?.user;
-        const currentUserId = userTelegram?.id ? String(userTelegram.id) : (localStorage.getItem('guest_uid') || ('guest_' + Math.floor(Math.random()*1000000)));
-        localStorage.setItem('guest_uid', currentUserId);
-
-        const currentUserName = userTelegram?.first_name 
-            ? (userTelegram.username ? `@${userTelegram.username}` : userTelegram.first_name) 
-            : `Беглец #${currentUserId.slice(-4)}`;
-
-        // ==========================================
-        // 🎁 СИСТЕМА ПРОМОКОДОВ
-        // ==========================================
-        const PROMO_CODES = {
-            "A200": { rewardScore: 100000, rewardRebirths: 0, desc: "+100 000 💰" },
-            "RELEASE": { rewardScore: 50000, rewardRebirths: 0, desc: "+50 000 💰" },
-            "ALEXEY166": { rewardScore: 166666, rewardRebirths: 0, desc: "+166 666 💰" },
-            "NOGOOD": { rewardScore: 150000, rewardRebirths: 1, desc: "+150 000 💰, +1 Перерождение 🌀" },
-            "STATISTICSNSTUFFSOON": { rewardScore: 200826, rewardRebirths: 0, desc: "+200 826 💰" },
-            "1KURBET": { rewardScore: 100000, rewardRebirths: 0, desc: "+100 000 💰 (🐔Коллаборация)" },
-            "OOFAHARDPLACE": { rewardScore: 1500000, rewardRebirths: 1, desc: "+1 500 000 💰, +1 Перерождение 🌀" },
-        };
-
-        function openCodeModal() {
-            document.getElementById('codeModal').style.display = 'flex';
-            document.getElementById('promoMsg').innerText = '';
-            document.getElementById('promoInput').value = '';
-            playSound('click');
-        }
-
-        function closeCodeModal() {
-            document.getElementById('codeModal').style.display = 'none';
-        }
-
-        function redeemCode() {
-            const input = document.getElementById('promoInput');
-            const code = input.value.trim().toUpperCase();
-            const msgEl = document.getElementById('promoMsg');
-
-            if (!code) return;
-
-            if (state.usedCodes && state.usedCodes[code]) {
-                msgEl.style.color = '#ff3344';
-                msgEl.innerText = '❌ Этот код уже был активирован!';
-                playSound('lose');
-                return;
+            if (!isInsideTelegram) {
+                document.getElementById('blockScreen').style.display = 'flex';
+                throw new Error("Direct browser access blocked");
             }
 
-            const promo = PROMO_CODES[code];
-            if (!promo) {
-                msgEl.style.color = '#ff3344';
-                msgEl.innerText = '❌ Неверный промокод!';
-                playSound('lose');
-                return;
-            }
+            tg.ready();
+            tg.expand();
 
-            if (!state.usedCodes) state.usedCodes = {};
-            state.usedCodes[code] = true;
+            document.addEventListener('contextmenu', e => e.preventDefault());
+            document.addEventListener('keydown', e => {
+                if (e.keyCode === 123 || (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74))) {
+                    e.preventDefault();
+                }
+            });
 
-            if (promo.rewardScore) {
-                state.score += promo.rewardScore;
-                state.totalEarned += promo.rewardScore;
-            }
-            if (promo.rewardRebirths) {
-                state.rebirths += promo.rewardRebirths;
-            }
+            // 🔑 SUPABASE НАСТРОЙКИ (ВСТАВЬ СВОИ ДАННЫЕ)
+            const SUPABASE_URL = "https://dyvotapsgnpltbieoxzb.supabase.co"; 
+            const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR5dm90YXBzZ25wbHRiaWVveHpiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3MTMyMDUsImV4cCI6MjEwMjI4OTIwNX0.Ig6eXMTfM9MTmGHh1fD6Ys7vwXHKMBH3qFY0jZfhI6Q";
 
-            msgEl.style.color = '#4cd964';
-            msgEl.innerText = `✅ Успешно! Получено: ${promo.desc}`;
-            playSound('trophy');
-            if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+            let db = null;
+            try {
+                if (SUPABASE_URL.includes("http") && !SUPABASE_URL.includes("ВАШ_ПРОЕКТ")) {
+                    const parsedUrl = new URL(SUPABASE_URL.trim());
+                    db = window.supabase.createClient(parsedUrl.origin, SUPABASE_KEY.trim());
+                }
+            } catch(e) { console.error("Supabase init error", e); }
 
-            input.value = '';
-            updateUI();
-            saveGame();
-        }
+            const userTelegram = tg?.initDataUnsafe?.user;
+            const currentUserId = userTelegram?.id ? String(userTelegram.id) : (localStorage.getItem('guest_uid') || ('guest_' + Math.floor(Math.random()*1000000)));
+            localStorage.setItem('guest_uid', currentUserId);
 
-        // ==========================================
-        // 🔊 ЗВУКОВОЙ ДВИЖОК
-        // ==========================================
-        let audioCtx = null;
-        let soundEnabled = true;
+            const currentUserName = userTelegram?.first_name 
+                ? (userTelegram.username ? `@${userTelegram.username}` : userTelegram.first_name) 
+                : `Беглец #${currentUserId.slice(-4)}`;
 
-        function initAudio() {
-            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            if (audioCtx.state === 'suspended') audioCtx.resume();
-        }
-
-        function playSound(type) {
-            if (!soundEnabled) return;
-            initAudio();
-            if (!audioCtx) return;
-            const now = audioCtx.currentTime;
-
-            if (type === 'click') {
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                const isBass = isPerkActive('bassboost');
-                osc.type = isBass ? 'triangle' : 'sawtooth';
-                osc.frequency.setValueAtTime(isBass ? 110 : (240 + Math.random() * 100), now);
-                osc.frequency.exponentialRampToValueAtTime(isBass ? 20 : 40, now + 0.08);
-                gain.gain.setValueAtTime(isBass ? 0.45 : 0.2, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
-                osc.connect(gain); gain.connect(audioCtx.destination);
-                osc.start(now); osc.stop(now + 0.08);
-            } else if (type === 'crit') {
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(650, now);
-                osc.frequency.exponentialRampToValueAtTime(120, now + 0.18);
-                gain.gain.setValueAtTime(0.3, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
-                osc.connect(gain); gain.connect(audioCtx.destination);
-                osc.start(now); osc.stop(now + 0.18);
-            } else if (type === 'buy') {
-                [440, 554, 659].forEach((freq, i) => {
-                    const osc = audioCtx.createOscillator();
-                    const gain = audioCtx.createGain();
-                    osc.type = 'sine';
-                    osc.frequency.setValueAtTime(freq, now + i * 0.05);
-                    gain.gain.setValueAtTime(0.2, now + i * 0.05);
-                    gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.05 + 0.12);
-                    osc.connect(gain); gain.connect(audioCtx.destination);
-                    osc.start(now + i * 0.05); osc.stop(now + i * 0.05 + 0.12);
-                });
-            } else if (type === 'trophy') {
-                [523, 659, 783, 1046, 1318].forEach((freq, i) => {
-                    const osc = audioCtx.createOscillator();
-                    const gain = audioCtx.createGain();
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(freq, now + i * 0.08);
-                    gain.gain.setValueAtTime(0.3, now + i * 0.08);
-                    gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.25);
-                    osc.connect(gain); gain.connect(audioCtx.destination);
-                    osc.start(now + i * 0.08); osc.stop(now + i * 0.08 + 0.25);
-                });
-            } else if (type === 'rebirth') {
-                [200, 300, 450, 600, 900, 1200].forEach((freq, i) => {
-                    const osc = audioCtx.createOscillator();
-                    const gain = audioCtx.createGain();
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(freq, now + i * 0.08);
-                    gain.gain.setValueAtTime(0.25, now + i * 0.08);
-                    gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.2);
-                    osc.connect(gain); gain.connect(audioCtx.destination);
-                    osc.start(now + i * 0.08); osc.stop(now + i * 0.08 + 0.2);
-                });
-            } else if (type === 'win') {
-                [523, 659, 783, 1046].forEach((freq, i) => {
-                    const osc = audioCtx.createOscillator();
-                    const gain = audioCtx.createGain();
-                    osc.type = 'triangle';
-                    osc.frequency.setValueAtTime(freq, now + i * 0.07);
-                    gain.gain.setValueAtTime(0.25, now + i * 0.07);
-                    gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.07 + 0.15);
-                    osc.connect(gain); gain.connect(audioCtx.destination);
-                    osc.start(now + i * 0.07); osc.stop(now + i * 0.07 + 0.15);
-                });
-            } else if (type === 'lose') {
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(160, now);
-                osc.frequency.linearRampToValueAtTime(60, now + 0.3);
-                gain.gain.setValueAtTime(0.3, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-                osc.connect(gain); gain.connect(audioCtx.destination);
-                osc.start(now); osc.stop(now + 0.3);
-            }
-        }
-
-        function toggleSound() {
-            soundEnabled = !soundEnabled;
-            document.getElementById('soundBtn').innerText = soundEnabled ? '🔊' : '🔇';
-        }
-
-        // ==========================================
-        // 🎮 ИГРОВОЙ ДВИЖОК
-        // ==========================================
-        function getRankThreshold(rankIndex) {
-            if (rankIndex <= 0) return 0;
-            if (rankIndex <= 15) {
-                return Math.floor(80 * (rankIndex * (rankIndex + 1)) / 2);
-            } else {
-                const baseAt15 = Math.floor(80 * (15 * 16) / 2); // 9600
-                const extra = rankIndex - 15;
-                return Math.floor(baseAt15 * Math.pow(1.13, extra));
-            }
-        }
-
-        function getRebirthCost(rebirthCount) {
-            return Math.floor(50000 * Math.pow(2.8, rebirthCount));
-        }
-
-        const UPGRADES_CONFIG = [
-            { id: 'tapPower', title: '⚡ Сила Тапа', desc: '+1 базовый клик', baseCost: 10, costMult: 1.5, type: 'tap', value: 1 },
-            { id: 'critChance', title: '🎯 Критический Удар', desc: '+2% шанс крита x5', baseCost: 75, costMult: 1.8, type: 'crit', value: 2, maxLvl: 25 },
-            { id: 'radio', title: '🔋 Батарейка', desc: '+1/сек', baseCost: 50, costMult: 1.6, type: 'cps', value: 1 },
-            { id: 'flashlight', title: '🔦 Фонарик', desc: '+8/сек', baseCost: 350, costMult: 1.65, type: 'cps', value: 8 },
-            { id: 'door', title: '🗄 Шкаф', desc: '+35/сек', baseCost: 1800, costMult: 1.7, type: 'cps', value: 35 },
-            { id: 'overload', title: '🌀 Спавн A200', desc: '+150/сек', baseCost: 9000, costMult: 1.75, type: 'cps', value: 150 }
-        ];
-
-        const PERKS_CONFIG = [
-            { id: 'glasses', title: '🕶️ Очки Thug Life', desc: 'Стильные очки на A200', cost: 15000 },
-            { id: 'chicken', title: '🐔 Шапка Курицы', desc: 'Коллаборация! Надевает курочку и спавнит яйца 🥚 (Промокод 1KURBET)', cost: 50000 },
-            { id: 'bassboost', title: '🔊 Басс-буст', desc: 'Тяжелый басовый клик', cost: 40000 },
-            { id: 'disco', title: '🪩 Дискотека A200', desc: 'Переливающийся неоновый фон', cost: 120000 },
-            { id: 'blood', title: '🩸 Кровавый Режим', desc: 'Зловещая багровая комната', cost: 350000 },
-            { id: 'storm', title: '🌧️ Шквал A200', desc: 'В 3x больше летающих лиц', cost: 800000 },
-            { id: 'crown', title: '👑 Золотая Корона', desc: 'Корона владыки A200', cost: 2000000 },
-            { id: 'goldFace', title: '🧀 Золотой A200', desc: 'Сверкающий золотой скин', cost: 5000000 },
-            { id: 'dice', title: '🎲 Шулерский Кубик', desc: '+10% к победе в рулетке', cost: 15000000 },
-            { id: 'energy', title: '⚡ Энергетик A200', desc: '+25% к пассивному доходу навсегда', cost: 50000000 }
-        ];
-
-        const TROPHIES_CONFIG = [
-            { id: 'a60', title: 'А60', desc: 'Один из Первых', roomReq: 60, img: 'a60.png' },
-            { id: 'gold_a200', title: 'Золотой A200', desc: 'Поздравляю!!', roomReq: 200, img: 'face.png', isGold: true },
-            { id: 'a166', title: 'А166', desc: 'беги.', roomReq: 360, img: 'a166.png' },
-            { id: 'a277', title: 'A277', desc: 'Please check your internet connection and try again.', roomReq: 480, img: 'a277.png' },
-            { id: 'escape', title: 'Побег', desc: 'Поздравляю, ты сбежал из этого места...или нет?', roomReq: 500, img: 'escape.png' },
-            { id: 'a1000', title: 'А1000', desc: 'Как долго это заняло..?', roomReq: 1000, img: 'a1000.png' }
-        ];
-
-        // ==========================================
-        // 🌐 100% СЕРВЕРНАЯ СИСТЕМА
-        // ==========================================
-        function getDefaultState() {
-            return {
-                score: 0,
-                totalEarned: 0,
-                tapPower: 1,
-                critChance: 5,
-                cps: 0,
-                rebirths: 0,
-                levels: { tapPower: 0, critChance: 0, radio: 0, flashlight: 0, door: 0, overload: 0 },
-                perks: {},
-                enabledPerks: {},
-                trophies: {},
-                usedCodes: {},
-                lastOnline: Date.now()
+            // 🎁 ПРОМОКОДЫ
+            const PROMO_CODES = {
+                "A200": { rewardScore: 100000, rewardRebirths: 0, desc: "+100 000 💰" },
+                "RELEASE": { rewardScore: 50000, rewardRebirths: 0, desc: "+50 000 💰" },
+                "ALEXEY166": { rewardScore: 166666, rewardRebirths: 0, desc: "+166 666 💰" },
+                "NOGOOD": { rewardScore: 150000, rewardRebirths: 1, desc: "+150 000 💰, +1 Перерождение 🌀" },
+                "STATISTICSNSTUFFSOON": { rewardScore: 200826, rewardRebirths: 0, desc: "+200 826 💰" },
+                "1KURBET": { rewardScore: 100000, rewardRebirths: 0, desc: "+100 000 💰 (🐔Коллаборация)" },
+                "OOFAHARDPLACE": { rewardScore: 1500000, rewardRebirths: 1, desc: "+1 500 000 💰, +1 Перерождение 🌀" },
             };
-        }
 
-        let state = getDefaultState();
-        let isCloudLoaded = false;
-        let pendingOfflineReward = 0;
+            // 🔊 ЗВУКОВОЙ ДВИЖОК
+            let audioCtx = null;
+            let soundEnabled = true;
 
-        function isPerkActive(id) {
-            if (!state.perks || !state.perks[id]) return false;
-            return state.enabledPerks[id] !== false;
-        }
-
-        // ⚡ Расчет дохода с учетом перерождений и энергетика
-        function getEffectiveCps() {
-            if (state.cps <= 0) return 0;
-            const energyMult = isPerkActive('energy') ? 1.25 : 1.0;
-            const rebirthMult = 1 + (state.rebirths * 0.25);
-            return Math.floor(state.cps * energyMult * rebirthMult);
-        }
-
-        let selectedBet = 0;
-
-        const scoreEl = document.getElementById('score');
-        const cpsEl = document.getElementById('cps');
-        const clickTargetContainer = document.getElementById('clickTargetContainer');
-        const clickTarget = document.getElementById('clickTarget');
-        const rankTitleEl = document.getElementById('rankTitle');
-        const nextRankProgressEl = document.getElementById('nextRankProgress');
-        const rankBarEl = document.getElementById('rankBar');
-        const rebirthBadgeEl = document.getElementById('rebirthBadge');
-        const tabUpgradesEl = document.getElementById('tabUpgrades');
-        const tabPerksEl = document.getElementById('tabPerks');
-        const tabTrophiesEl = document.getElementById('tabTrophies');
-
-        function switchTab(tabId, btn) {
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.content-panel').forEach(p => p.classList.remove('active'));
-            btn.classList.add('active');
-
-            if (tabId === 'upgrades') document.getElementById('tabUpgrades').classList.add('active');
-            if (tabId === 'casino') document.getElementById('tabCasino').classList.add('active');
-            if (tabId === 'perks') document.getElementById('tabPerks').classList.add('active');
-            if (tabId === 'trophies') document.getElementById('tabTrophies').classList.add('active');
-            if (tabId === 'leaderboard') {
-                document.getElementById('tabLeaderboard').classList.add('active');
-                fetchLeaderboard();
+            function initAudio() {
+                if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                if (audioCtx.state === 'suspended') audioCtx.resume();
             }
-            if (tabId === 'rebirth') document.getElementById('tabRebirth').classList.add('active');
-        }
 
-        function getUpgradeCost(cfg) {
-            const lvl = state.levels[cfg.id] || 0;
-            return Math.floor(cfg.baseCost * Math.pow(cfg.costMult, lvl));
-        }
+            function playSound(type) {
+                if (!soundEnabled) return;
+                initAudio();
+                if (!audioCtx) return;
+                const now = audioCtx.currentTime;
 
-        function renderUpgrades() {
-            tabUpgradesEl.innerHTML = '';
-            UPGRADES_CONFIG.forEach(cfg => {
-                const lvl = state.levels[cfg.id] || 0;
-                const isMax = cfg.maxLvl && lvl >= cfg.maxLvl;
-                const cost = getUpgradeCost(cfg);
+                if (type === 'click') {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    const isBass = isPerkActive('bassboost');
+                    osc.type = isBass ? 'triangle' : 'sawtooth';
+                    osc.frequency.setValueAtTime(isBass ? 110 : (240 + Math.random() * 100), now);
+                    osc.frequency.exponentialRampToValueAtTime(isBass ? 20 : 40, now + 0.08);
+                    gain.gain.setValueAtTime(isBass ? 0.45 : 0.2, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.08);
+                    osc.connect(gain); gain.connect(audioCtx.destination);
+                    osc.start(now); osc.stop(now + 0.08);
+                } else if (type === 'crit') {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(650, now);
+                    osc.frequency.exponentialRampToValueAtTime(120, now + 0.18);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
+                    osc.connect(gain); gain.connect(audioCtx.destination);
+                    osc.start(now); osc.stop(now + 0.18);
+                } else if (type === 'buy') {
+                    [440, 554, 659].forEach((freq, i) => {
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(freq, now + i * 0.05);
+                        gain.gain.setValueAtTime(0.2, now + i * 0.05);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.05 + 0.12);
+                        osc.connect(gain); gain.connect(audioCtx.destination);
+                        osc.start(now + i * 0.05); osc.stop(now + i * 0.05 + 0.12);
+                    });
+                } else if (type === 'trophy') {
+                    [523, 659, 783, 1046, 1318].forEach((freq, i) => {
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(freq, now + i * 0.08);
+                        gain.gain.setValueAtTime(0.3, now + i * 0.08);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.25);
+                        osc.connect(gain); gain.connect(audioCtx.destination);
+                        osc.start(now + i * 0.08); osc.stop(now + i * 0.08 + 0.25);
+                    });
+                } else if (type === 'rebirth') {
+                    [200, 300, 450, 600, 900, 1200].forEach((freq, i) => {
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(freq, now + i * 0.08);
+                        gain.gain.setValueAtTime(0.25, now + i * 0.08);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.08 + 0.2);
+                        osc.connect(gain); gain.connect(audioCtx.destination);
+                        osc.start(now + i * 0.08); osc.stop(now + i * 0.08 + 0.2);
+                    });
+                } else if (type === 'win') {
+                    [523, 659, 783, 1046].forEach((freq, i) => {
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(freq, now + i * 0.07);
+                        gain.gain.setValueAtTime(0.25, now + i * 0.07);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.07 + 0.15);
+                        osc.connect(gain); gain.connect(audioCtx.destination);
+                        osc.start(now + i * 0.07); osc.stop(now + i * 0.07 + 0.15);
+                    });
+                } else if (type === 'lose') {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(160, now);
+                    osc.frequency.linearRampToValueAtTime(60, now + 0.3);
+                    gain.gain.setValueAtTime(0.3, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                    osc.connect(gain); gain.connect(audioCtx.destination);
+                    osc.start(now); osc.stop(now + 0.3);
+                }
+            }
 
-                const btn = document.createElement('button');
-                btn.className = 'card-btn';
-                btn.disabled = isMax || state.score < cost;
-                btn.onclick = () => buyUpgrade(cfg);
-
-                btn.innerHTML = `
-                    <div class="btn-info">
-                        <div class="btn-title">${cfg.title}</div>
-                        <div class="btn-desc">${cfg.desc} (Ур. ${lvl})</div>
-                    </div>
-                    <div class="btn-cost">${isMax ? 'МАКС' : cost.toLocaleString() + ' 💰'}</div>
-                `;
-                tabUpgradesEl.appendChild(btn);
-            });
-        }
-
-        function renderPerks() {
-            tabPerksEl.innerHTML = '';
-            PERKS_CONFIG.forEach(cfg => {
-                const isBought = !!state.perks[cfg.id];
-                const active = isPerkActive(cfg.id);
-
-                const btn = document.createElement('button');
-                if (!isBought) {
-                    btn.className = 'card-btn';
-                    btn.disabled = state.score < cfg.cost;
-                    btn.onclick = () => buyPerk(cfg);
-                    btn.innerHTML = `
-                        <div class="btn-info">
-                            <div class="btn-title">${cfg.title}</div>
-                            <div class="btn-desc">${cfg.desc}</div>
-                        </div>
-                        <div class="btn-cost">${cfg.cost.toLocaleString()} 💰</div>
-                    `;
+            // 🎮 ИГРОВОЙ ДВИЖОК
+            function getRankThreshold(rankIndex) {
+                if (rankIndex <= 0) return 0;
+                if (rankIndex <= 15) {
+                    return Math.floor(80 * (rankIndex * (rankIndex + 1)) / 2);
                 } else {
-                    btn.className = `card-btn ${active ? 'perk-on' : 'perk-off'}`;
-                    btn.onclick = () => togglePerk(cfg.id);
-                    btn.innerHTML = `
-                        <div class="btn-info">
-                            <div class="btn-title">${cfg.title}</div>
-                            <div class="btn-desc">${cfg.desc}</div>
-                        </div>
-                        <div class="${active ? 'badge-on' : 'badge-off'}">${active ? 'ВКЛ 🟢' : 'ВЫКЛ 🔴'}</div>
-                    `;
+                    const baseAt15 = Math.floor(80 * (15 * 16) / 2);
+                    const extra = rankIndex - 15;
+                    return Math.floor(baseAt15 * Math.pow(1.13, extra));
                 }
-                tabPerksEl.appendChild(btn);
-            });
-        }
+            }
 
-        function togglePerk(id) {
-            if (!state.perks || !state.perks[id]) return;
-            if (!state.enabledPerks) state.enabledPerks = {};
+            function getRebirthCost(rebirthCount) {
+                return Math.floor(50000 * Math.pow(2.8, rebirthCount));
+            }
 
-            state.enabledPerks[id] = !isPerkActive(id);
+            const UPGRADES_CONFIG = [
+                { id: 'tapPower', title: '⚡ Сила Тапа', desc: '+1 базовый клик', baseCost: 10, costMult: 1.5, type: 'tap', value: 1 },
+                { id: 'critChance', title: '🎯 Критический Удар', desc: '+2% шанс крита x5', baseCost: 75, costMult: 1.8, type: 'crit', value: 2, maxLvl: 25 },
+                { id: 'radio', title: '🔋 Батарейка', desc: '+1/сек', baseCost: 50, costMult: 1.6, type: 'cps', value: 1 },
+                { id: 'flashlight', title: '🔦 Фонарик', desc: '+8/сек', baseCost: 350, costMult: 1.65, type: 'cps', value: 8 },
+                { id: 'door', title: '🗄 Шкаф', desc: '+35/сек', baseCost: 1800, costMult: 1.7, type: 'cps', value: 35 },
+                { id: 'overload', title: '🌀 Спавн A200', desc: '+150/сек', baseCost: 9000, costMult: 1.75, type: 'cps', value: 150 }
+            ];
 
-            playSound('click');
-            if (tg?.HapticFeedback) tg.HapticFeedback.selectionChanged();
+            const PERKS_CONFIG = [
+                { id: 'glasses', title: '🕶️ Очки Thug Life', desc: 'Стильные очки на A200', cost: 15000 },
+                { id: 'chicken', title: '🐔 Шапка Курицы', desc: 'Коллаборация! Надевает курочку и спавнит яйца 🥚', cost: 50000 },
+                { id: 'bassboost', title: '🔊 Басс-буст', desc: 'Тяжелый басовый клик', cost: 40000 },
+                { id: 'disco', title: '🪩 Дискотека A200', desc: 'Переливающийся неоновый фон', cost: 120000 },
+                { id: 'blood', title: '🩸 Кровавый Режим', desc: 'Зловещая багровая комната', cost: 350000 },
+                { id: 'storm', title: '🌧️ Шквал A200', desc: 'В 3x больше летающих лиц', cost: 800000 },
+                { id: 'crown', title: '👑 Золотая Корона', desc: 'Корона владыки A200', cost: 2000000 },
+                { id: 'goldFace', title: '🧀 Золотой A200', desc: 'Сверкающий золотой скин', cost: 5000000 },
+                { id: 'dice', title: '🎲 Шулерский Кубик', desc: '+10% к победе в рулетке', cost: 15000000 },
+                { id: 'energy', title: '⚡ Энергетик A200', desc: '+25% к пассивному доходу навсегда', cost: 50000000 }
+            ];
 
-            applyPerksVisuals();
-            updateUI();
-            saveGame();
-        }
+            const TROPHIES_CONFIG = [
+                { id: 'a60', title: 'А60', desc: 'Один из Первых', roomReq: 60, img: 'a60.png' },
+                { id: 'gold_a200', title: 'Золотой A200', desc: 'Поздравляю!!', roomReq: 200, img: 'face.png', isGold: true },
+                { id: 'a166', title: 'А166', desc: 'беги.', roomReq: 360, img: 'a166.png' },
+                { id: 'a277', title: 'A277', desc: 'Please check your internet connection and try again.', roomReq: 480, img: 'a277.png' },
+                { id: 'escape', title: 'Побег', desc: 'Поздравляю, ты сбежал из этого места...или нет?', roomReq: 500, img: 'escape.png' },
+                { id: 'a1000', title: 'А1000', desc: 'Как долго это заняло..?', roomReq: 1000, img: 'a1000.png' }
+            ];
 
-        function renderTrophies() {
-            tabTrophiesEl.innerHTML = '';
-            TROPHIES_CONFIG.forEach(t => {
-                const isUnlocked = !!state.trophies[t.id];
-                const card = document.createElement('div');
-                card.className = 'trophy-card ' + (isUnlocked ? 'unlocked' : 'locked');
-                const goldStyle = t.isGold ? 'filter: sepia(1) saturate(5) hue-rotate(5deg);' : '';
+            function getDefaultState() {
+                return {
+                    score: 0,
+                    totalEarned: 0,
+                    tapPower: 1,
+                    critChance: 5,
+                    cps: 0,
+                    rebirths: 0,
+                    levels: { tapPower: 0, critChance: 0, radio: 0, flashlight: 0, door: 0, overload: 0 },
+                    perks: {},
+                    enabledPerks: {},
+                    trophies: {},
+                    usedCodes: {},
+                    lastOnline: Date.now()
+                };
+            }
 
-                card.innerHTML = `
-                    <img src="${t.img}" class="trophy-img" style="${goldStyle}">
-                    <div class="trophy-info">
-                        <div class="trophy-title">${t.title}</div>
-                        <div class="trophy-desc">${t.desc}</div>
-                    </div>
-                    <div class="trophy-status">${isUnlocked ? 'ПОЛУЧЕНО ✅' : `🔒 Комната ${t.roomReq}`}</div>
-                `;
-                tabTrophiesEl.appendChild(card);
-            });
-        }
+            let state = getDefaultState();
+            let isCloudLoaded = false;
+            let pendingOfflineReward = 0;
+            let selectedBet = 0;
+            let isSpinning = false;
+            let currentAngle = 0;
 
-        function showTrophyPopup(trophy) {
-            const popup = document.getElementById('trophyPopup');
-            const img = document.getElementById('popupTrophyImg');
-            const title = document.getElementById('popupTrophyTitle');
-            const desc = document.getElementById('popupTrophyDesc');
+            function isPerkActive(id) {
+                if (!state.perks || !state.perks[id]) return false;
+                return state.enabledPerks[id] !== false;
+            }
 
-            img.src = trophy.img;
-            img.style.filter = trophy.isGold ? 'sepia(1) saturate(5) hue-rotate(5deg)' : 'none';
-            title.innerText = trophy.title;
-            desc.innerText = trophy.desc;
+            function getEffectiveCps() {
+                if (state.cps <= 0) return 0;
+                const energyMult = isPerkActive('energy') ? 1.25 : 1.0;
+                const rebirthMult = 1 + (state.rebirths * 0.25);
+                return Math.floor(state.cps * energyMult * rebirthMult);
+            }
 
-            popup.classList.add('show');
-            playSound('trophy');
-            if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+            const scoreEl = document.getElementById('score');
+            const cpsEl = document.getElementById('cps');
+            const clickTargetContainer = document.getElementById('clickTargetContainer');
+            const clickTarget = document.getElementById('clickTarget');
+            const rankTitleEl = document.getElementById('rankTitle');
+            const nextRankProgressEl = document.getElementById('nextRankProgress');
+            const rankBarEl = document.getElementById('rankBar');
+            const rebirthBadgeEl = document.getElementById('rebirthBadge');
+            const tabUpgradesEl = document.getElementById('tabUpgrades');
+            const tabPerksEl = document.getElementById('tabPerks');
+            const tabTrophiesEl = document.getElementById('tabTrophies');
 
-            setTimeout(() => { popup.classList.remove('show'); }, 4000);
-        }
+            window.switchTab = function(tabId, btn) {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.content-panel').forEach(p => p.classList.remove('active'));
+                btn.classList.add('active');
 
-        function checkTrophies(currentRoom) {
-            TROPHIES_CONFIG.forEach(t => {
-                if (currentRoom >= t.roomReq && !state.trophies[t.id]) {
-                    state.trophies[t.id] = true;
-                    showTrophyPopup(t);
-                    renderTrophies();
-                    saveGame();
+                if (tabId === 'upgrades') document.getElementById('tabUpgrades').classList.add('active');
+                if (tabId === 'casino') document.getElementById('tabCasino').classList.add('active');
+                if (tabId === 'perks') document.getElementById('tabPerks').classList.add('active');
+                if (tabId === 'trophies') document.getElementById('tabTrophies').classList.add('active');
+                if (tabId === 'leaderboard') {
+                    document.getElementById('tabLeaderboard').classList.add('active');
+                    fetchLeaderboard();
                 }
-            });
-        }
+                if (tabId === 'rebirth') document.getElementById('tabRebirth').classList.add('active');
+            };
 
-        function applyPerksVisuals() {
-            document.getElementById('accGlasses').style.display = isPerkActive('glasses') ? 'block' : 'none';
-            document.getElementById('accCrown').style.display = isPerkActive('crown') ? 'block' : 'none';
-            document.getElementById('accChicken').style.display = isPerkActive('chicken') ? 'block' : 'none';
-            
-            clickTarget.classList.toggle('gold-face', isPerkActive('goldFace'));
-            document.body.classList.toggle('disco-mode', isPerkActive('disco'));
-            document.body.classList.toggle('blood-mode', isPerkActive('blood'));
-        }
+            window.toggleSound = function() {
+                soundEnabled = !soundEnabled;
+                document.getElementById('soundBtn').innerText = soundEnabled ? '🔊' : '🔇';
+            };
 
-        function buyUpgrade(cfg) {
-            const cost = getUpgradeCost(cfg);
-            if (state.score >= cost) {
-                state.score -= cost;
-                state.levels[cfg.id] = (state.levels[cfg.id] || 0) + 1;
+            window.openCodeModal = function() {
+                document.getElementById('codeModal').style.display = 'flex';
+                document.getElementById('promoMsg').innerText = '';
+                document.getElementById('promoInput').value = '';
+                playSound('click');
+            };
 
-                if (cfg.type === 'tap') state.tapPower += cfg.value;
-                if (cfg.type === 'crit') state.critChance += cfg.value;
-                if (cfg.type === 'cps') state.cps += cfg.value;
+            window.closeCodeModal = function() {
+                document.getElementById('codeModal').style.display = 'none';
+            };
 
-                playSound('buy');
+            window.redeemCode = function() {
+                const input = document.getElementById('promoInput');
+                const code = input.value.trim().toUpperCase();
+                const msgEl = document.getElementById('promoMsg');
+
+                if (!code) return;
+
+                if (state.usedCodes && state.usedCodes[code]) {
+                    msgEl.style.color = '#ff3344';
+                    msgEl.innerText = '❌ Этот код уже был активирован!';
+                    playSound('lose');
+                    return;
+                }
+
+                const promo = PROMO_CODES[code];
+                if (!promo) {
+                    msgEl.style.color = '#ff3344';
+                    msgEl.innerText = '❌ Неверный промокод!';
+                    playSound('lose');
+                    return;
+                }
+
+                if (!state.usedCodes) state.usedCodes = {};
+                state.usedCodes[code] = true;
+
+                if (promo.rewardScore) {
+                    state.score += promo.rewardScore;
+                    state.totalEarned += promo.rewardScore;
+                }
+                if (promo.rewardRebirths) {
+                    state.rebirths += promo.rewardRebirths;
+                }
+
+                msgEl.style.color = '#4cd964';
+                msgEl.innerText = `✅ Успешно! Получено: ${promo.desc}`;
+                playSound('trophy');
                 if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+
+                input.value = '';
                 updateUI();
                 saveGame();
+            };
+
+            function getUpgradeCost(cfg) {
+                const lvl = state.levels[cfg.id] || 0;
+                return Math.floor(cfg.baseCost * Math.pow(cfg.costMult, lvl));
             }
-        }
 
-        function buyPerk(cfg) {
-            if (state.score >= cfg.cost && !state.perks[cfg.id]) {
-                state.score -= cfg.cost;
-                state.perks[cfg.id] = true;
+            function renderUpgrades() {
+                tabUpgradesEl.innerHTML = '';
+                UPGRADES_CONFIG.forEach(cfg => {
+                    const lvl = state.levels[cfg.id] || 0;
+                    const isMax = cfg.maxLvl && lvl >= cfg.maxLvl;
+                    const cost = getUpgradeCost(cfg);
+
+                    const btn = document.createElement('button');
+                    btn.className = 'card-btn';
+                    btn.disabled = isMax || state.score < cost;
+                    btn.onclick = () => buyUpgrade(cfg);
+
+                    btn.innerHTML = `
+                        <div class="btn-info">
+                            <div class="btn-title">${cfg.title}</div>
+                            <div class="btn-desc">${cfg.desc} (Ур. ${lvl})</div>
+                        </div>
+                        <div class="btn-cost">${isMax ? 'МАКС' : cost.toLocaleString() + ' 💰'}</div>
+                    `;
+                    tabUpgradesEl.appendChild(btn);
+                });
+            }
+
+            function renderPerks() {
+                tabPerksEl.innerHTML = '';
+                PERKS_CONFIG.forEach(cfg => {
+                    const isBought = !!state.perks[cfg.id];
+                    const active = isPerkActive(cfg.id);
+
+                    const btn = document.createElement('button');
+                    if (!isBought) {
+                        btn.className = 'card-btn';
+                        btn.disabled = state.score < cfg.cost;
+                        btn.onclick = () => buyPerk(cfg);
+                        btn.innerHTML = `
+                            <div class="btn-info">
+                                <div class="btn-title">${cfg.title}</div>
+                                <div class="btn-desc">${cfg.desc}</div>
+                            </div>
+                            <div class="btn-cost">${cfg.cost.toLocaleString()} 💰</div>
+                        `;
+                    } else {
+                        btn.className = `card-btn ${active ? 'perk-on' : 'perk-off'}`;
+                        btn.onclick = () => togglePerk(cfg.id);
+                        btn.innerHTML = `
+                            <div class="btn-info">
+                                <div class="btn-title">${cfg.title}</div>
+                                <div class="btn-desc">${cfg.desc}</div>
+                            </div>
+                            <div class="${active ? 'badge-on' : 'badge-off'}">${active ? 'ВКЛ 🟢' : 'ВЫКЛ 🔴'}</div>
+                        `;
+                    }
+                    tabPerksEl.appendChild(btn);
+                });
+            }
+
+            function togglePerk(id) {
+                if (!state.perks || !state.perks[id]) return;
                 if (!state.enabledPerks) state.enabledPerks = {};
-                state.enabledPerks[cfg.id] = true;
 
-                playSound('win');
-                if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+                state.enabledPerks[id] = !isPerkActive(id);
+
+                playSound('click');
+                if (tg?.HapticFeedback) tg.HapticFeedback.selectionChanged();
+
                 applyPerksVisuals();
                 updateUI();
                 saveGame();
             }
-        }
 
-        function doRebirth() {
-            const cost = getRebirthCost(state.rebirths);
-            if (state.score >= cost) {
-                state.rebirths += 1;
-                state.score = 0;
-                state.tapPower = 1;
-                state.critChance = 5;
-                state.cps = 0;
-                state.levels = { tapPower: 0, critChance: 0, radio: 0, flashlight: 0, door: 0, overload: 0 };
+            function renderTrophies() {
+                tabTrophiesEl.innerHTML = '';
+                TROPHIES_CONFIG.forEach(t => {
+                    const isUnlocked = !!state.trophies[t.id];
+                    const card = document.createElement('div');
+                    card.className = 'trophy-card ' + (isUnlocked ? 'unlocked' : 'locked');
+                    const goldStyle = t.isGold ? 'filter: sepia(1) saturate(5) hue-rotate(5deg);' : '';
 
-                playSound('rebirth');
+                    card.innerHTML = `
+                        <img src="${t.img}" class="trophy-img" style="${goldStyle}">
+                        <div class="trophy-info">
+                            <div class="trophy-title">${t.title}</div>
+                            <div class="trophy-desc">${t.desc}</div>
+                        </div>
+                        <div class="trophy-status">${isUnlocked ? 'ПОЛУЧЕНО ✅' : `🔒 Комната ${t.roomReq}`}</div>
+                    `;
+                    tabTrophiesEl.appendChild(card);
+                });
+            }
+
+            function showTrophyPopup(trophy) {
+                const popup = document.getElementById('trophyPopup');
+                const img = document.getElementById('popupTrophyImg');
+                const title = document.getElementById('popupTrophyTitle');
+                const desc = document.getElementById('popupTrophyDesc');
+
+                img.src = trophy.img;
+                img.style.filter = trophy.isGold ? 'sepia(1) saturate(5) hue-rotate(5deg)' : 'none';
+                title.innerText = trophy.title;
+                desc.innerText = trophy.desc;
+
+                popup.classList.add('show');
+                playSound('trophy');
                 if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
 
+                setTimeout(() => { popup.classList.remove('show'); }, 4000);
+            }
+
+            function checkTrophies(currentRoom) {
+                TROPHIES_CONFIG.forEach(t => {
+                    if (currentRoom >= t.roomReq && !state.trophies[t.id]) {
+                        state.trophies[t.id] = true;
+                        showTrophyPopup(t);
+                        renderTrophies();
+                        saveGame();
+                    }
+                });
+            }
+
+            function applyPerksVisuals() {
+                document.getElementById('accGlasses').style.display = isPerkActive('glasses') ? 'block' : 'none';
+                document.getElementById('accCrown').style.display = isPerkActive('crown') ? 'block' : 'none';
+                document.getElementById('accChicken').style.display = isPerkActive('chicken') ? 'block' : 'none';
+                
+                clickTarget.classList.toggle('gold-face', isPerkActive('goldFace'));
+                document.body.classList.toggle('disco-mode', isPerkActive('disco'));
+                document.body.classList.toggle('blood-mode', isPerkActive('blood'));
+            }
+
+            function buyUpgrade(cfg) {
+                const cost = getUpgradeCost(cfg);
+                if (state.score >= cost) {
+                    state.score -= cost;
+                    state.levels[cfg.id] = (state.levels[cfg.id] || 0) + 1;
+
+                    if (cfg.type === 'tap') state.tapPower += cfg.value;
+                    if (cfg.type === 'crit') state.critChance += cfg.value;
+                    if (cfg.type === 'cps') state.cps += cfg.value;
+
+                    playSound('buy');
+                    if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+                    updateUI();
+                    saveGame();
+                }
+            }
+
+            function buyPerk(cfg) {
+                if (state.score >= cfg.cost && !state.perks[cfg.id]) {
+                    state.score -= cfg.cost;
+                    state.perks[cfg.id] = true;
+                    if (!state.enabledPerks) state.enabledPerks = {};
+                    state.enabledPerks[cfg.id] = true;
+
+                    playSound('win');
+                    if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+                    applyPerksVisuals();
+                    updateUI();
+                    saveGame();
+                }
+            }
+
+            window.doRebirth = function() {
+                const cost = getRebirthCost(state.rebirths);
+                if (state.score >= cost) {
+                    state.rebirths += 1;
+                    state.score = 0;
+                    state.tapPower = 1;
+                    state.critChance = 5;
+                    state.cps = 0;
+                    state.levels = { tapPower: 0, critChance: 0, radio: 0, flashlight: 0, door: 0, overload: 0 };
+
+                    playSound('rebirth');
+                    if (tg?.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+
+                    updateUI();
+                    saveGame();
+                }
+            };
+
+            function updateRebirthUI() {
+                const cost = getRebirthCost(state.rebirths);
+                const boostPercent = state.rebirths * 25;
+
+                rebirthBadgeEl.innerText = `🌀 Перерождений: ${state.rebirths} (+${boostPercent}%)`;
+                document.getElementById('rebirthLvlText').innerText = state.rebirths;
+                document.getElementById('rebirthBoostText').innerText = `+${boostPercent}%`;
+
+                const btn = document.getElementById('rebirthActionBtn');
+                btn.innerText = `ПЕРЕРОДИТЬСЯ (${cost.toLocaleString()} 💰)`;
+                btn.disabled = state.score < cost;
+            }
+
+            function getCurrentRoomNumber() {
+                let rank = 1;
+                while (state.totalEarned >= getRankThreshold(rank)) { rank++; }
+                return rank * 10;
+            }
+
+            function updateUI() {
+                scoreEl.innerText = Math.floor(state.score).toLocaleString();
+                const effectiveCps = getEffectiveCps();
+                cpsEl.innerText = `В секунду: +${effectiveCps.toLocaleString()}`;
+
+                updateInfiniteRank();
+                renderUpgrades();
+                renderPerks();
+                renderTrophies();
+                updateBetUI();
+                updateRebirthUI();
+            }
+
+            function updateInfiniteRank() {
+                let rank = 1;
+                while (state.totalEarned >= getRankThreshold(rank)) { rank++; }
+                rank--;
+
+                const currentRoomNumber = (rank + 1) * 10;
+                rankTitleEl.innerText = `🚪Комната ${currentRoomNumber}`;
+
+                const curThresh = getRankThreshold(rank);
+                const nextThresh = getRankThreshold(rank + 1);
+                const diff = nextThresh - curThresh;
+                const progress = state.totalEarned - curThresh;
+                const percent = Math.min(100, Math.max(0, (progress / diff) * 100));
+
+                rankBarEl.style.width = `${percent}%`;
+                nextRankProgressEl.innerText = `${Math.floor(state.totalEarned).toLocaleString()} / ${nextThresh.toLocaleString()}`;
+
+                checkTrophies(currentRoomNumber);
+            }
+
+            window.setBetFraction = function(frac) {
+                selectedBet = Math.floor(state.score * frac);
+                updateBetUI();
+            };
+
+            function updateBetUI() {
+                if (selectedBet > state.score) selectedBet = state.score;
+                document.getElementById('currentBetText').innerText = `Ставка: ${selectedBet.toLocaleString()} 💰`;
+                document.getElementById('spinBtn').disabled = selectedBet <= 0 || isSpinning;
+            }
+
+            window.spinRoulette = function() {
+                if (isSpinning || selectedBet <= 0 || state.score < selectedBet) return;
+
+                isSpinning = true;
+                const bet = selectedBet;
+                state.score -= bet;
                 updateUI();
-                saveGame();
-            }
-        }
 
-        function updateRebirthUI() {
-            const cost = getRebirthCost(state.rebirths);
-            const boostPercent = state.rebirths * 25;
+                const rouletteDisplay = document.getElementById('rouletteDisplay');
+                const spinBtn = document.getElementById('spinBtn');
+                spinBtn.disabled = true;
 
-            rebirthBadgeEl.innerText = `🌀 Перерождений: ${state.rebirths} (+${boostPercent}%)`;
-            document.getElementById('rebirthLvlText').innerText = state.rebirths;
-            document.getElementById('rebirthBoostText').innerText = `+${boostPercent}%`;
+                const luckBonus = isPerkActive('dice') ? 10 : 0;
+                const roll = Math.random() * 100;
 
-            const btn = document.getElementById('rebirthActionBtn');
-            btn.innerText = `ПЕРЕРОДИТЬСЯ (${cost.toLocaleString()} 💰)`;
-            btn.disabled = state.score < cost;
-        }
+                let outcome;
+                if (roll < (30 - luckBonus / 2)) {
+                    outcome = { mult: 0, text: '💀 0x (СЛИВ)', sound: 'lose' };
+                } else if (roll < (60 - luckBonus / 2)) {
+                    outcome = { mult: 0.5, text: '📉 0.5x (ПОЛОВИНА)', sound: 'lose' };
+                } else if (roll < (85 + luckBonus / 2)) {
+                    outcome = { mult: 1.5, text: '📈 1.5x (ВЫИГРЫШ)', sound: 'win' };
+                } else if (roll < 97) {
+                    outcome = { mult: 2.0, text: '🔥 2.0x (УДВОЕНИЕ)', sound: 'win' };
+                } else {
+                    outcome = { mult: 3.0, text: '👑 3.0x (ДЖЕКПОТ!)', sound: 'win' };
+                }
 
-        function getCurrentRoomNumber() {
-            let rank = 1;
-            while (state.totalEarned >= getRankThreshold(rank)) { rank++; }
-            return rank * 10;
-        }
+                let ticks = 0;
+                const fakeOutcomes = ['0x 💀', '0.5x 📉', '1.5x 📈', '2.0x 🔥', '3.0x 👑'];
+                const interval = setInterval(() => {
+                    rouletteDisplay.innerText = fakeOutcomes[ticks % fakeOutcomes.length];
+                    playSound('click');
+                    ticks++;
 
-        function updateUI() {
-            scoreEl.innerText = Math.floor(state.score).toLocaleString();
-            const effectiveCps = getEffectiveCps();
-            cpsEl.innerText = `В секунду: +${effectiveCps.toLocaleString()}`;
-
-            updateInfiniteRank();
-            renderUpgrades();
-            renderPerks();
-            renderTrophies();
-            updateBetUI();
-            updateRebirthUI();
-        }
-
-        function updateInfiniteRank() {
-            let rank = 1;
-            while (state.totalEarned >= getRankThreshold(rank)) { rank++; }
-            rank--;
-
-            const currentRoomNumber = (rank + 1) * 10;
-            rankTitleEl.innerText = `🚪Комната ${currentRoomNumber}`;
-
-            const curThresh = getRankThreshold(rank);
-            const nextThresh = getRankThreshold(rank + 1);
-            const diff = nextThresh - curThresh;
-            const progress = state.totalEarned - curThresh;
-            const percent = Math.min(100, Math.max(0, (progress / diff) * 100));
-
-            rankBarEl.style.width = `${percent}%`;
-            nextRankProgressEl.innerText = `${Math.floor(state.totalEarned).toLocaleString()} / ${nextThresh.toLocaleString()}`;
-
-            checkTrophies(currentRoomNumber);
-        }
-
-        function setBetFraction(frac) {
-            selectedBet = Math.floor(state.score * frac);
-            updateBetUI();
-        }
-
-        function updateBetUI() {
-            if (selectedBet > state.score) selectedBet = state.score;
-            document.getElementById('currentBetText').innerText = `Ставка: ${selectedBet.toLocaleString()} 💰`;
-            document.getElementById('spinBtn').disabled = selectedBet <= 0 || isSpinning;
-        }
-
-        let isSpinning = false;
-        function spinRoulette() {
-            if (isSpinning || selectedBet <= 0 || state.score < selectedBet) return;
-
-            isSpinning = true;
-            const bet = selectedBet;
-            state.score -= bet;
-            updateUI();
-
-            const rouletteDisplay = document.getElementById('rouletteDisplay');
-            const spinBtn = document.getElementById('spinBtn');
-            spinBtn.disabled = true;
-
-            const luckBonus = isPerkActive('dice') ? 10 : 0;
-            const roll = Math.random() * 100;
-
-            let outcome;
-            if (roll < (30 - luckBonus / 2)) {
-                outcome = { mult: 0, text: '💀 0x (СЛИВ)', sound: 'lose' };
-            } else if (roll < (60 - luckBonus / 2)) {
-                outcome = { mult: 0.5, text: '📉 0.5x (ПОЛОВИНА)', sound: 'lose' };
-            } else if (roll < (85 + luckBonus / 2)) {
-                outcome = { mult: 1.5, text: '📈 1.5x (ВЫИГРЫШ)', sound: 'win' };
-            } else if (roll < 97) {
-                outcome = { mult: 2.0, text: '🔥 2.0x (УДВОЕНИЕ)', sound: 'win' };
-            } else {
-                outcome = { mult: 3.0, text: '👑 3.0x (ДЖЕКПОТ!)', sound: 'win' };
-            }
-
-            let ticks = 0;
-            const fakeOutcomes = ['0x 💀', '0.5x 📉', '1.5x 📈', '2.0x 🔥', '3.0x 👑'];
-            const interval = setInterval(() => {
-                rouletteDisplay.innerText = fakeOutcomes[ticks % fakeOutcomes.length];
-                playSound('click');
-                ticks++;
-
-                if (ticks > 15) {
-                    clearInterval(interval);
-                    isSpinning = false;
-                    
-                    const winnings = Math.floor(bet * outcome.mult);
-                    state.score += winnings;
-                    if (winnings > bet) state.totalEarned += (winnings - bet);
+                    if (ticks > 15) {
+                        clearInterval(interval);
+                        isSpinning = false;
+                        
+                        const winnings = Math.floor(bet * outcome.mult);
+                        state.score += winnings;
+                        if (winnings > bet) state.totalEarned += (winnings - bet);
 
                     rouletteDisplay.innerText = outcome.text;
                     playSound(outcome.sound);
@@ -1419,9 +1405,7 @@
                     saveGame();
                 }
             }, 100);
-        }
-
-        let currentAngle = 0;
+        };
 
         clickTargetContainer.addEventListener('pointerdown', (e) => {
             const isCrit = Math.random() * 100 < state.critChance;
@@ -1462,8 +1446,6 @@
         function spawnFallingFaces(startX, startY, count) {
             for (let i = 0; i < Math.min(count, 20); i++) {
                 let el;
-                
-                // 🥚 Если надета шапка курицы — часть частиц превращается в яйца и цыплят!
                 if (isPerkActive('chicken') && Math.random() < 0.45) {
                     el = document.createElement('div');
                     el.innerText = Math.random() > 0.5 ? '🥚' : '🐣';
@@ -1522,9 +1504,7 @@
             }
         }, 1000);
 
-        // ==========================================
-        // 💤 СИСТЕМА ОФФЛАЙН-ДОХОДА
-        // ==========================================
+        // 💤 ОФФЛАЙН-ДОХОД
         function checkOfflineIncome() {
             const now = Date.now();
             const lastTime = state.lastOnline || now;
@@ -1533,9 +1513,7 @@
             const cappedSeconds = Math.min(diffSeconds, 28800);
             const effectiveCps = getEffectiveCps();
 
-            // Срабатывает от 5 секунд отсутствия
             if (cappedSeconds >= 5 && effectiveCps > 0) {
-                // 🤫 Сбалансированный оффлайн-доход
                 pendingOfflineReward = Math.floor((cappedSeconds * effectiveCps) / 5);
 
                 if (pendingOfflineReward > 0) {
@@ -1558,7 +1536,7 @@
             return `${secs} сек`;
         }
 
-        function claimOfflineReward() {
+        window.claimOfflineReward = function() {
             if (pendingOfflineReward > 0) {
                 state.score += pendingOfflineReward;
                 state.totalEarned += pendingOfflineReward;
@@ -1572,11 +1550,9 @@
                 updateUI();
                 saveGame();
             }
-        }
+        };
 
-        // ==========================================
         // 🌐 ЗАГРУЗКА И СОХРАНЕНИЕ В SUPABASE
-        // ==========================================
         async function loadCloudSave() {
             const loadingScreen = document.getElementById('cloudLoadingScreen');
 
@@ -1596,6 +1572,7 @@
                 if (data) {
                     let cloudData = data.save_data || {};
 
+                    // Ручные правки очков в таблице Supabase применяются сразу
                     if (data.score !== null && data.score !== undefined) cloudData.score = Number(data.score);
                     if (data.total_earned !== null && data.total_earned !== undefined) cloudData.totalEarned = Number(data.total_earned);
                     if (data.rebirths !== null && data.rebirths !== undefined) cloudData.rebirths = Number(data.rebirths);
@@ -1658,6 +1635,7 @@
                 }, { onConflict: 'user_id' });
 
                 if (error) {
+                    console.error("Save error:", error);
                     document.getElementById('cloudStatus').innerText = '⚠️ Ошибка';
                 } else {
                     document.getElementById('cloudStatus').innerText = '☁️ Сохранено';
@@ -1680,10 +1658,11 @@
             }
 
             try {
-                // 🚪 Сортировка: сначала по КОМНАТАМ, затем по перерождениям и очкам
+                // 🚪 Сортировка ТОП-5 по комнатам без забаненных читеров
                 const { data, error } = await db
                     .from('players')
                     .select('username, rebirths, room, score')
+                    .eq('is_banned', false)
                     .order('room', { ascending: false })
                     .order('rebirths', { ascending: false })
                     .order('score', { ascending: false })
@@ -1723,6 +1702,7 @@
         }
 
         loadCloudSave();
+    })();
     </script>
 </body>
 </html>
