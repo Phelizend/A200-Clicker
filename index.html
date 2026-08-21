@@ -650,6 +650,19 @@
         </p>
     </div>
 
+    <!-- ⛔ ПОЛНОЭКРАННОЕ ОКНО БАНА -->
+    <div id="banScreen" style="display: none; position: fixed; inset: 0; background: #0a0304; z-index: 999999; flex-direction: column; align-items: center; justify-content: center; padding: 24px; text-align: center;">
+        <div style="font-size: 54px; margin-bottom: 8px;">⛔</div>
+        <h2 style="color: #ff2a4b; font-size: 22px; font-weight: 900; letter-spacing: 1px; margin-bottom: 8px; text-shadow: 0 0 15px rgba(255, 42, 75, 0.6);">ДОСТУП ЗАБЛОКИРОВАН</h2>
+        <p style="color: #ccc; font-size: 12px; max-width: 290px; line-height: 1.5; margin-bottom: 15px;">
+            Ваш аккаунт был заблокирован античитом/админом за использование читов или подозрительную активность.
+        </p>
+        <div style="background: rgba(255, 42, 75, 0.1); border: 1px solid rgba(255, 42, 75, 0.3); border-radius: 10px; padding: 8px 14px; font-size: 11px; color: #ff8899; margin-bottom: 20px;" id="banDetailsText">
+            ID: 000000 | Статус: ЗАБАНЕН
+        </div>
+        <div style="color: #666; font-size: 10px;">Если вы считаете, что это ошибка — обратитесь в @PhelizenSupportBot.</div>
+    </div>
+
     <!-- 🔄 ЭКРАН СИНХРОНИЗАЦИИ ОБЛАКА -->
     <div id="cloudLoadingScreen">
         <div style="font-size: 40px; margin-bottom: 12px; animation: pulseHalo 1.5s infinite alternate;">☁️</div>
@@ -1552,6 +1565,18 @@
             }
         };
 
+        // ⛔ ФУНКЦИЯ ОТОБРАЖЕНИЯ БАНА
+        // ==========================================
+        function showBanScreen() {
+            const banScreen = document.getElementById('banScreen');
+            if (banScreen) {
+                document.getElementById('banDetailsText').innerText = `ID: ${currentUserId} | Статус: ЗАБАНЕН ⛔`;
+                banScreen.style.display = 'flex';
+            }
+            const loadingScreen = document.getElementById('cloudLoadingScreen');
+            if (loadingScreen) loadingScreen.style.display = 'none';
+        }
+            
         // 🌐 ЗАГРУЗКА И СОХРАНЕНИЕ В SUPABASE
         async function loadCloudSave() {
             const loadingScreen = document.getElementById('cloudLoadingScreen');
@@ -1570,9 +1595,14 @@
                     .maybeSingle();
 
                 if (data) {
+                    // ⛔ ЕСЛИ ИГРОК ЗАБАНЕН — МГНОВЕННО БЛОКИРУЕМ ЭКРАН:
+                    if (data.is_banned) {
+                        showBanScreen();
+                        return;
+                    }
+
                     let cloudData = data.save_data || {};
 
-                    // Ручные правки очков в таблице Supabase применяются сразу
                     if (data.score !== null && data.score !== undefined) cloudData.score = Number(data.score);
                     if (data.total_earned !== null && data.total_earned !== undefined) cloudData.totalEarned = Number(data.total_earned);
                     if (data.rebirths !== null && data.rebirths !== undefined) cloudData.rebirths = Number(data.rebirths);
@@ -1635,8 +1665,12 @@
                 }, { onConflict: 'user_id' });
 
                 if (error) {
-                    console.error("Save error:", error);
-                    document.getElementById('cloudStatus').innerText = '⚠️ Ошибка';
+                    // Если база ответила, что аккаунт забанен — сразу вешаем экран бана
+                    if (error.message && error.message.includes('banned')) {
+                        showBanScreen();
+                    } else {
+                        document.getElementById('cloudStatus').innerText = '⚠️ Ошибка';
+                    }
                 } else {
                     document.getElementById('cloudStatus').innerText = '☁️ Сохранено';
                 }
